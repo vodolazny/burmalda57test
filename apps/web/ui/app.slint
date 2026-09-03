@@ -1185,21 +1185,42 @@ component LoginScreen inherits Rectangle {
         }
     }
 
+    // Декоративные фоновые волнистые линии (не обрезаются и масштабируются под любой экран)
     Path {
-        x: 0; y: 0; width: 100%; height: 100%;
-        viewbox-x: 0; viewbox-y: 0; viewbox-width: 400; viewbox-height: 820;
-        commands: "M -60 250 C 130 140 340 200 480 430";
+        x: -20px;
+        y: 0;
+        width: root.width + 40px;
+        height: 100%;
+        viewbox-x: 0; viewbox-y: 0;
+        viewbox-width: 1000; viewbox-height: 1000;
+        commands: "M 0 300 C 300 150, 650 420, 1000 280";
         fill: transparent;
-        stroke: Theme.on-surface-variant.transparentize(0.7);
+        stroke: Theme.on-surface-variant.transparentize(0.72);
         stroke-width: 1.5px;
     }
     Path {
-        x: 0; y: 0; width: 100%; height: 100%;
-        viewbox-x: 0; viewbox-y: 0; viewbox-width: 400; viewbox-height: 820;
-        commands: "M -40 720 C 40 560 300 520 470 640";
+        x: -20px;
+        y: 0;
+        width: root.width + 40px;
+        height: 100%;
+        viewbox-x: 0; viewbox-y: 0;
+        viewbox-width: 1000; viewbox-height: 1000;
+        commands: "M 0 720 C 350 850, 680 540, 1000 660";
         fill: transparent;
         stroke: Theme.on-surface-variant.transparentize(0.78);
         stroke-width: 1.5px;
+    }
+    Path {
+        x: -20px;
+        y: 0;
+        width: root.width + 40px;
+        height: 100%;
+        viewbox-x: 0; viewbox-y: 0;
+        viewbox-width: 1000; viewbox-height: 1000;
+        commands: "M 0 480 C 280 620, 720 320, 1000 460";
+        fill: transparent;
+        stroke: Theme.primary.transparentize(0.85);
+        stroke-width: 1.2px;
     }
 
     VerticalLayout {
