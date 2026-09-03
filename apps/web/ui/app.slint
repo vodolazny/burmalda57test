@@ -1348,8 +1348,8 @@ component EventSheet inherits Rectangle {
     property <bool> valid: name-in.text != "" && start-in.text != ""
         && !Validate.invalid(start-in.text) && !Validate.invalid(end-in.text);
 
-    // Лёгкий скрим: клик мимо карточки закрывает её
-    background: #000000.transparentize(0.35);
+    // Оверлей 100% прозрачный, клик мимо карточки закрывает её
+    background: transparent;
 
     scrim-ta := TouchArea {
         clicked => { root.close(); }
@@ -1364,9 +1364,11 @@ component EventSheet inherits Rectangle {
         height: card-col.preferred-height;
         border-radius: 16px;
         background: Theme.surface-container-high;
-        drop-shadow-blur: 24px;
-        drop-shadow-color: Theme.shadow;
-        drop-shadow-offset-y: 6px;
+        border-width: 1px;
+        border-color: Theme.outline-variant;
+        drop-shadow-blur: 32px;
+        drop-shadow-color: Theme.dark ? #000000CC : #00000045;
+        drop-shadow-offset-y: 8px;
 
         inner-ta := TouchArea {
             clicked => { dismiss-fs.focus(); }
@@ -1613,12 +1615,11 @@ component DiaryView inherits Rectangle {
             HorizontalLayout {
                 padding-left: 20px;
                 padding-right: 20px;
-                spacing: 8px;
+                spacing: 14px;
 
                 VerticalLayout {
                     alignment: center;
-                    spacing: 0px;
-                    horizontal-stretch: 1;
+                    spacing: 1px;
                     Text {
                         text: "Дневник";
                         font-size: 22px;
@@ -1633,10 +1634,11 @@ component DiaryView inherits Rectangle {
                     }
                 }
 
+                // Кнопки навигации по дням перенесены к дате
                 VerticalLayout {
                     alignment: center;
                     HorizontalLayout {
-                        spacing: 8px;
+                        spacing: 6px;
                         RoundIconButton {
                             icon: "M15 6 L9 12 L15 18";
                             clicked => { root.prev-day(); }
@@ -1649,10 +1651,17 @@ component DiaryView inherits Rectangle {
                             icon: "M7 2 v3 M17 2 v3 M4 5 h16 v16 H4 Z M4 10 h16";
                             clicked => { root.open-calendar(); }
                         }
-                        RoundIconButton {
-                            icon: "M20 12 a8 8 0 1 1 -2.9 -6.2 M20 4 v4.5 h-4.5";
-                            clicked => { root.refresh(); }
-                        }
+                    }
+                }
+
+                Rectangle { horizontal-stretch: 1; }
+
+                // Кнопка обновления остаётся справа
+                VerticalLayout {
+                    alignment: center;
+                    RoundIconButton {
+                        icon: "M20 12 a8 8 0 1 1 -2.9 -6.2 M20 4 v4.5 h-4.5";
+                        clicked => { root.refresh(); }
                     }
                 }
             }
@@ -2658,6 +2667,15 @@ component GradesView inherits Rectangle {
     property <int> gap5: root.sel-avg >= 4.6 ? 0
         : (root.gap5-raw <= 0 ? 0 : (root.gap5-raw + 0.999).floor());
 
+    pure function format-col(l: string) -> string {
+        return l == "1" ? "1 чт"
+             : l == "2" ? "2 чт"
+             : l == "3" ? "3 чт"
+             : l == "4" ? "4 чт"
+             : (l == "Год" || l == "год" || l == "Итог" || l == "Итоговая") ? "Итог"
+             : l;
+    }
+
     // График успеваемости за год (загружается Rust'ом для выбранного предмета)
     in property <[ChartPoint]> chart-points;
     in property <[ChartDivider]> chart-dividers;
@@ -2995,101 +3013,142 @@ component GradesView inherits Rectangle {
             }
         }
 
-        // ================= ГОДОВАЯ (компактная таблица) =================
+        // ================= ГОДОВАЯ (компактная таблица M3 Data Table) =================
         if root.active-mode == 1 : Rectangle {
             vertical-stretch: 1;
             clip: true;
 
-            // Центрированная таблица фиксированной ширины:
-            // Предмет | 1 чт | 2 чт | 3 чт | 4 чт | Год
-            if root.finals.length > 0 : Rectangle {
-                width: min(parent.width, 760px);
-                x: (parent.width - self.width) / 2;
-                y: 16px;
-                height: table.preferred-height;
-                border-radius: Theme.radius-m;
-                background: Theme.surface-container;
-                clip: true;
+            // Центрированная таблица по канонам M3: Предмет | 1 чт | 2 чт | 3 чт | 4 чт | Итог
+            if root.finals.length > 0 : VerticalLayout {
+                alignment: start;
+                padding-top: 16px;
+                padding-bottom: 20px;
+                padding-left: 20px;
+                padding-right: 20px;
 
-                Flickable {
-                    width: 100%;
-                    height: 100%;
-                    viewport-width: self.width;
-                    viewport-height: table.preferred-height;
+                Rectangle {
+                    width: min(parent.width - 40px, 860px);
+                    max-height: parent.height - 40px;
+                    border-radius: Theme.radius-m;
+                    background: Theme.surface-container;
+                    border-width: 1px;
+                    border-color: Theme.outline-variant;
+                    drop-shadow-blur: 16px;
+                    drop-shadow-color: Theme.shadow;
+                    drop-shadow-offset-y: 3px;
+                    clip: true;
 
-                    table := VerticalLayout {
-                        width: parent.width;
-                        alignment: start;
+                    VerticalLayout {
+                        spacing: 0px;
 
-                        // Шапка: подписи периодов из первой строки
-                        HorizontalLayout {
-                            height: 44px;
-                            padding-left: 16px;
-                            padding-right: 16px;
-                            spacing: 8px;
-                            Text {
-                                horizontal-stretch: 1;
-                                text: "Предмет";
-                                font-size: 12px;
-                                font-weight: 700;
-                                color: Theme.on-surface-variant;
-                                vertical-alignment: center;
-                            }
-                            for m in root.finals[0].marks : Text {
-                                width: 56px;
-                                text: m.label;
-                                font-size: 12px;
-                                font-weight: 700;
-                                color: Theme.on-surface-variant;
-                                horizontal-alignment: center;
-                                vertical-alignment: center;
+                        // Шапка таблицы (M3 Data Table Header)
+                        Rectangle {
+                            height: 48px;
+                            background: Theme.surface-container-high;
+
+                            HorizontalLayout {
+                                padding-left: 20px;
+                                padding-right: 16px;
+                                spacing: 8px;
+
+                                Text {
+                                    horizontal-stretch: 1;
+                                    text: "Предмет";
+                                    font-size: 13px;
+                                    font-weight: 700;
+                                    color: Theme.on-surface-variant;
+                                    vertical-alignment: center;
+                                }
+                                for m[j] in root.finals[0].marks : Text {
+                                    width: j == root.finals[0].marks.length - 1 ? 72px : 64px;
+                                    text: root.format-col(m.label);
+                                    font-size: 13px;
+                                    font-weight: j == root.finals[0].marks.length - 1 ? 800 : 700;
+                                    color: j == root.finals[0].marks.length - 1 ? Theme.primary : Theme.on-surface-variant;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
                             }
                         }
+
                         Rectangle { height: 1px; background: Theme.outline-variant; }
 
-                        // Строки предметов
-                        for row[i] in root.finals : VerticalLayout {
-                            alignment: start;
-                            Rectangle {
-                                height: 44px;
-                                background: row-ta.has-hover ? Theme.surface-container-high : (Math.mod(i, 2) == 1 ? Theme.surface-container-low : transparent);
-                                HorizontalLayout {
-                                    padding-left: 16px;
-                                    padding-right: 16px;
-                                    spacing: 8px;
-                                    Text {
-                                        horizontal-stretch: 1;
-                                        text: row.subject;
-                                        font-size: 14px;
-                                        font-weight: 600;
-                                        color: Theme.on-surface;
-                                        overflow: elide;
-                                        wrap: no-wrap;
-                                        vertical-alignment: center;
+                        // Тело таблицы со скроллом
+                        Flickable {
+                            vertical-stretch: 1;
+                            viewport-width: self.width;
+                            viewport-height: table-body.preferred-height;
+
+                            table-body := VerticalLayout {
+                                alignment: start;
+                                spacing: 0px;
+
+                                for row[i] in root.finals : VerticalLayout {
+                                    alignment: start;
+                                    spacing: 0px;
+
+                                    Rectangle {
+                                        height: 46px;
+                                        background: row-ta.has-hover ? Theme.surface-container-highest
+                                                  : (Math.mod(i, 2) == 1 ? Theme.surface-container-low : transparent);
+
+                                        HorizontalLayout {
+                                            padding-left: 20px;
+                                            padding-right: 16px;
+                                            spacing: 8px;
+
+                                            Text {
+                                                horizontal-stretch: 1;
+                                                text: row.subject;
+                                                font-size: 14px;
+                                                font-weight: 600;
+                                                color: Theme.on-surface;
+                                                overflow: elide;
+                                                wrap: no-wrap;
+                                                vertical-alignment: center;
+                                            }
+
+                                            for m[j] in row.marks : Rectangle {
+                                                width: j == row.marks.length - 1 ? 72px : 64px;
+                                                mc := MarkColor {
+                                                    value: m.average-val >= 4.59 ? 5
+                                                         : m.average-val >= 3.59 ? 4
+                                                         : m.average-val >= 2.59 ? 3
+                                                         : m.average-val > 0.0 ? 2
+                                                         : 0;
+                                                }
+
+                                                // Акцентная плашка для итоговой оценки
+                                                if j == row.marks.length - 1 && m.average != "—" && m.average != "" : Rectangle {
+                                                    width: 36px;
+                                                    height: 28px;
+                                                    border-radius: 8px;
+                                                    background: mc.fg.transparentize(0.85);
+                                                    border-width: 1px;
+                                                    border-color: mc.fg.transparentize(0.65);
+                                                    x: (parent.width - self.width) / 2;
+                                                    y: (parent.height - self.height) / 2;
+                                                }
+
+                                                Text {
+                                                    text: m.average;
+                                                    font-size: j == row.marks.length - 1 ? 15px : 14px;
+                                                    font-weight: j == row.marks.length - 1 ? 800 : 700;
+                                                    color: m.average == "—" ? Theme.on-surface-variant.transparentize(0.4) : mc.fg;
+                                                    horizontal-alignment: center;
+                                                    vertical-alignment: center;
+                                                }
+                                            }
+                                        }
+
+                                        row-ta := TouchArea { }
                                     }
-                                    for m in row.marks : Rectangle {
-                                        width: 56px;
-                                        mc := MarkColor {
-                                            value: m.average-val >= 4.59 ? 5
-                                                 : m.average-val >= 3.59 ? 4
-                                                 : m.average-val >= 2.59 ? 3
-                                                 : m.average-val > 0.0 ? 2
-                                                 : 0;
-                                        }
-                                        Text {
-                                            text: m.average;
-                                            font-size: 14px;
-                                            font-weight: 700;
-                                            color: m.average == "—" ? Theme.on-surface-variant : mc.fg;
-                                            vertical-alignment: center;
-                                        }
+
+                                    if i < root.finals.length - 1 : Rectangle {
+                                        height: 1px;
+                                        background: Theme.outline-variant.transparentize(0.5);
                                     }
                                 }
-                                row-ta := TouchArea { }
-                            }
-                            if i < root.finals.length - 1 : Rectangle {
-                                height: 1px;
-                                background: Theme.outline-variant;
                             }
                         }
                     }
