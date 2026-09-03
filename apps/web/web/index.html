@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Электронный дневник obr57</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #fafafa;
+        }
+        @media (prefers-color-scheme: dark) {
+            html, body { background: #121212; }
+        }
+        canvas {
+            width: 100vw !important;
+            height: 100vh !important;
+            outline: none;
+            touch-action: none;
+        }
+        #loading {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-family: sans-serif;
+            color: #888;
+            font-size: 15px;
+            padding: 24px;
+            box-sizing: border-box;
+        }
+    </style>
+    <script>
+        // Диагностика: показываем понятную причину, если приложение не грузится.
+        (function () {
+            function fail(msg, hint) {
+                var el = document.getElementById('loading');
+                if (!el) return;
+                el.innerHTML = '';
+                var t = document.createElement('div');
+                t.textContent = msg;
+                t.style.color = '#e57373';
+                t.style.fontWeight = 'bold';
+                var h = document.createElement('div');
+                h.textContent = hint;
+                h.style.whiteSpace = 'pre-line';
+                el.appendChild(t);
+                el.appendChild(h);
+            }
+            window.__showLoadError = fail;
+
+            if (location.protocol === 'file:') {
+                // ES-модули и fetch(wasm) на file:// блокируются браузером.
+                window.addEventListener('DOMContentLoaded', function () {
+                    fail(
+                        'Страница открыта как file:// — так работать не будет.',
+                        'Браузер блокирует ES-модули и загрузку .wasm с диска.\n' +
+                        'Запустите локальный HTTP-сервер:\n\n' +
+                        '  cd web\n' +
+                        '  python -m http.server 8080\n\n' +
+                        'и откройте http://localhost:8080'
+                    );
+                });
+            }
+
+            // Ошибки загрузки скриптов/модулей (например, нет web/pkg).
+            window.addEventListener('error', function (e) {
+                if (e && e.target && e.target.tagName) return; // ошибки ресурсов
+                if (window.__appBooted) return;
+                fail(
+                    'Не удалось загрузить приложение.',
+                    'Проверьте, что собрана обвязка: web/pkg/burmalda57.js и .wasm\n' +
+                    '(запустите build_web.ps1) и что страница открыта по http.\n\n' +
+                    'Детали: ' + (e && e.message ? e.message : 'неизвестно')
+                );
+            }, true);
+        })();
+    </script>
+</head>
+<body>
+    <div id="loading">Загрузка приложения…</div>
+    <canvas id="canvas"></canvas>
+    <script type="module">
+        import init from './pkg/burmalda57.js';
+        // ?proxy=<url> — опциональный CORS-прокси для запросов к mp2.obr57.ru
+        init().then(() => {
+            window.__appBooted = true;
+            const el = document.getElementById('loading');
+            if (el) el.remove();
+        }).catch((e) => {
+            window.__showLoadError(
+                'Не удалось запустить wasm.',
+                'Обычно причина — открытие по file:// или отсутствие web/pkg.\n' +
+                'Откройте страницу через HTTP-сервер и пересоберите проект (build_web.ps1).\n\n' +
+                'Детали: ' + e
+            );
+            console.error(e);
+        });
+    </script>
+</body>
+</html>
