@@ -103,7 +103,7 @@ export global Theme {
     // Результирующий признак dark
     in-out property <bool> dark: theme-mode == 0 ? true : theme-mode == 1 ? false : system-dark;
 
-    // Акцентный цвет: 0 — Фиолетовый (M3), 1 — Синий, 2 — Зелёный, 3 — Оранжевый
+    // Акцентный цвет: 0 — Фиолетовый (M3), 1 — Синий, 2 — Зелёный, 3 — Оранжевый, 4 — Ч/Б (монохром)
     in-out property <int> accent-color: 0;
 
     // Accent 1 (primary)
@@ -111,24 +111,28 @@ export global Theme {
         accent-color == 1 ? (dark ? #A8C7FA : #0B57D0) :
         accent-color == 2 ? (dark ? #7ADA91 : #1B6D36) :
         accent-color == 3 ? (dark ? #FFB77C : #8F4C00) :
+        accent-color == 4 ? (dark ? #E6E1E5 : #1D1B20) :
         (dark ? #D0BCFF : #6750A4);
 
     in-out property <color> on-primary:
         accent-color == 1 ? (dark ? #0842A0 : #FFFFFF) :
         accent-color == 2 ? (dark ? #003915 : #FFFFFF) :
         accent-color == 3 ? (dark ? #4D2700 : #FFFFFF) :
+        accent-color == 4 ? (dark ? #1D1B20 : #FFFFFF) :
         (dark ? #381E72 : #FFFFFF);
 
     in-out property <color> primary-container:
         accent-color == 1 ? (dark ? #0842A0 : #D3E3FD) :
         accent-color == 2 ? (dark ? #005322 : #95F7AB) :
         accent-color == 3 ? (dark ? #6E3900 : #FFDCC2) :
+        accent-color == 4 ? (dark ? #333138 : #E2E0E6) :
         (dark ? #4F378B : #EADDFF);
 
     in-out property <color> on-primary-container:
         accent-color == 1 ? (dark ? #D3E3FD : #041E49) :
         accent-color == 2 ? (dark ? #95F7AB : #00210A) :
         accent-color == 3 ? (dark ? #FFDCC2 : #2E1500) :
+        accent-color == 4 ? (dark ? #E2E0E6 : #1D1B20) :
         (dark ? #EADDFF : #21005D);
 
     // Accent 2 (secondary — tonal-бейджи, навбар-таблетка)
@@ -136,12 +140,14 @@ export global Theme {
         accent-color == 1 ? (dark ? #004A77 : #C2E7FF) :
         accent-color == 2 ? (dark ? #2E4E36 : #CCE8D0) :
         accent-color == 3 ? (dark ? #564032 : #F3DFD1) :
+        accent-color == 4 ? (dark ? #3A383F : #E5E1E6) :
         (dark ? #4A4458 : #E8DEF8);
 
     in-out property <color> on-secondary-container:
         accent-color == 1 ? (dark ? #C2E7FF : #001D35) :
         accent-color == 2 ? (dark ? #CCE8D0 : #0B1F11) :
         accent-color == 3 ? (dark ? #F3DFD1 : #24160C) :
+        accent-color == 4 ? (dark ? #E5E1E6 : #1D1B20) :
         (dark ? #E8DEF8 : #1D192B);
 
     // Нейтрали с динамическим тинтом выбранной палитры (Material You)
@@ -149,24 +155,28 @@ export global Theme {
         accent-color == 1 ? (dark ? #0f141c : #f0f4fa) :
         accent-color == 2 ? (dark ? #0e1510 : #f0f6f1) :
         accent-color == 3 ? (dark ? #18120e : #faf2eb) :
+        accent-color == 4 ? (dark ? #141414 : #fafafa) :
         (dark ? #141218 : #fef7ff);
 
     in-out property <color> on-surface:
         accent-color == 1 ? (dark ? #e1e7f0 : #141b24) :
         accent-color == 2 ? (dark ? #e0e8e1 : #121d15) :
         accent-color == 3 ? (dark ? #e8e2dc : #221811) :
+        accent-color == 4 ? (dark ? #e4e4e4 : #1a1a1a) :
         (dark ? #e6e1e5 : #1d1b20);
 
     in-out property <color> on-surface-variant:
         accent-color == 1 ? (dark ? #c0c8d4 : #404854) :
         accent-color == 2 ? (dark ? #bfd0c2 : #3f4a42) :
         accent-color == 3 ? (dark ? #cfc3b8 : #4e443c) :
+        accent-color == 4 ? (dark ? #c2c2c2 : #4a4a4a) :
         (dark ? #cac4d0 : #49454f);
 
     in-out property <color> outline:
         accent-color == 1 ? (dark ? #8a939f : #707884) :
         accent-color == 2 ? (dark ? #88968b : #6e7971) :
         accent-color == 3 ? (dark ? #978c82 : #7d736a) :
+        accent-color == 4 ? (dark ? #888888 : #7a7a7a) :
         (dark ? #938f99 : #79747e);
 
     // ================================================================
@@ -1968,6 +1978,7 @@ component DiaryView inherits Rectangle {
 component ColorDot inherits Rectangle {
     in property <color> dot-color;
     in property <bool> selected;
+    in property <bool> is-bw: false;
     callback clicked();
 
     width: 38px;
@@ -1981,7 +1992,9 @@ component ColorDot inherits Rectangle {
         width: 26px;
         height: 26px;
         border-radius: 13px;
-        background: root.dot-color;
+        background: root.is-bw ? @linear-gradient(135deg, #1C1B1F 50%, #E6E1E5 50%) : root.dot-color;
+        border-width: root.is-bw ? 1px : 0px;
+        border-color: Theme.outline-variant;
         x: (parent.width - self.width) / 2;
         y: (parent.height - self.height) / 2;
 
@@ -1993,7 +2006,7 @@ component ColorDot inherits Rectangle {
             viewbox-width: 24;
             viewbox-height: 24;
             commands: "M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z";
-            fill: #ffffff;
+            fill: root.is-bw ? (Theme.dark ? #FFFFFF : #000000) : #ffffff;
         }
     }
 
@@ -2294,49 +2307,47 @@ component ProfileView inherits Rectangle {
 
                         Rectangle { height: 1px; background: Theme.outline-variant; }
 
-                        // Акцентный цвет
-                        HorizontalLayout {
-                            spacing: 12px;
+                        // Акцентный цвет (сдвинут влево)
+                        VerticalLayout {
+                            spacing: 10px;
 
-                            VerticalLayout {
-                                horizontal-stretch: 1;
-                                alignment: center;
-
-                                Text {
-                                    text: "Акцентный цвет";
-                                    font-size: 15px;
-                                    font-weight: 600;
-                                    color: Theme.on-surface;
-                                    horizontal-alignment: left;
-                                }
+                            Text {
+                                text: "Акцентный цвет";
+                                font-size: 15px;
+                                font-weight: 600;
+                                color: Theme.on-surface;
+                                horizontal-alignment: left;
                             }
 
-                            VerticalLayout {
-                                alignment: center;
-                                HorizontalLayout {
-                                    spacing: 8px;
-                                    alignment: center;
+                            HorizontalLayout {
+                                spacing: 10px;
+                                alignment: start;
 
-                                    ColorDot {
-                                        dot-color: #6750A4;
-                                        selected: Theme.accent-color == 0;
-                                        clicked => { Theme.accent-color = 0; }
-                                    }
-                                    ColorDot {
-                                        dot-color: #0B57D0;
-                                        selected: Theme.accent-color == 1;
-                                        clicked => { Theme.accent-color = 1; }
-                                    }
-                                    ColorDot {
-                                        dot-color: #1B6D36;
-                                        selected: Theme.accent-color == 2;
-                                        clicked => { Theme.accent-color = 2; }
-                                    }
-                                    ColorDot {
-                                        dot-color: #8F4C00;
-                                        selected: Theme.accent-color == 3;
-                                        clicked => { Theme.accent-color = 3; }
-                                    }
+                                ColorDot {
+                                    dot-color: #6750A4;
+                                    selected: Theme.accent-color == 0;
+                                    clicked => { Theme.accent-color = 0; }
+                                }
+                                ColorDot {
+                                    dot-color: #0B57D0;
+                                    selected: Theme.accent-color == 1;
+                                    clicked => { Theme.accent-color = 1; }
+                                }
+                                ColorDot {
+                                    dot-color: #1B6D36;
+                                    selected: Theme.accent-color == 2;
+                                    clicked => { Theme.accent-color = 2; }
+                                }
+                                ColorDot {
+                                    dot-color: #8F4C00;
+                                    selected: Theme.accent-color == 3;
+                                    clicked => { Theme.accent-color = 3; }
+                                }
+                                ColorDot {
+                                    dot-color: #555555;
+                                    is-bw: true;
+                                    selected: Theme.accent-color == 4;
+                                    clicked => { Theme.accent-color = 4; }
                                 }
                             }
                         }
@@ -2591,44 +2602,47 @@ component SubjectRow inherits Rectangle {
     ta := TouchArea { clicked => { root.select(); } }
 }
 
-// Строка истории оценок: жетон + дата + работа
-component GradeRow inherits Rectangle {
+// Компактная карточка-квадратик для одной оценки в ряд
+component GradeSquareCard inherits Rectangle {
     in property <int> value;
     in property <string> date;
     in property <string> work;
 
-    height: 46px;
-    border-radius: Theme.radius-s;
-    background: ta.pressed ? Theme.surface-container-high : Theme.surface-container;
+    width: 48px;
+    height: 52px;
+    border-radius: 10px;
+    background: root.value == 5 ? Theme.mark-5.transparentize(0.86)
+        : root.value == 4 ? Theme.mark-4.transparentize(0.86)
+        : root.value == 3 ? Theme.mark-3.transparentize(0.86)
+        : Theme.mark-2.transparentize(0.86);
+    border-width: 1.5px;
+    border-color: root.value == 5 ? Theme.mark-5.transparentize(0.4)
+        : root.value == 4 ? Theme.mark-4.transparentize(0.4)
+        : root.value == 3 ? Theme.mark-3.transparentize(0.4)
+        : Theme.mark-2.transparentize(0.4);
 
-    HorizontalLayout {
-        padding-left: 10px;
-        padding-right: 12px;
-        spacing: 12px;
-        VerticalLayout {
-            alignment: center;
-            MarkToken { text: "\{root.value}"; value: root.value; size: 30px; font: 14px; }
+    VerticalLayout {
+        alignment: center;
+        spacing: 1px;
+
+        Text {
+            text: "\{root.value}";
+            font-size: 17px;
+            font-weight: 800;
+            color: root.value == 5 ? Theme.mark-5
+                : root.value == 4 ? Theme.mark-4
+                : root.value == 3 ? Theme.mark-3
+                : Theme.mark-2;
+            horizontal-alignment: center;
         }
-        VerticalLayout {
-            alignment: center;
-            spacing: 0px;
-            horizontal-stretch: 1;
-            Text {
-                text: root.work == "" ? "Оценка" : root.work;
-                font-size: 13px;
-                font-weight: 600;
-                color: Theme.on-surface;
-                overflow: elide;
-                wrap: no-wrap;
-            }
-            Text {
-                text: root.date;
-                font-size: 11px;
-                color: Theme.on-surface-variant;
-            }
+        Text {
+            text: root.date;
+            font-size: 9px;
+            font-weight: 600;
+            color: Theme.on-surface-variant;
+            horizontal-alignment: center;
         }
     }
-    ta := TouchArea { }
 }
 
 // Компактная стат-карточка: подпись + значение
@@ -3230,7 +3244,7 @@ component GradesView inherits Rectangle {
                                 }
                             }
 
-                            // Стат-карточки: средний / прогноз / путь до «5»
+                            // Стат-карточки: средний / прогноз
                             HorizontalLayout {
                                 spacing: 12px;
                                 StatCard {
@@ -3243,6 +3257,38 @@ component GradesView inherits Rectangle {
                                     label: "Прогноз за четверть";
                                     value: root.sel-count > 0 ? "\{root.sel-proj}" : "—";
                                     value-color: root.sel-proj-color;
+                                }
+                            }
+
+                            // Все оценки (карточками-квадратиками в ряд)
+                            if root.sel-count > 0 : VerticalLayout {
+                                spacing: 8px;
+                                Text {
+                                    text: "Все оценки (" + root.sel-count + ")";
+                                    font-size: 11px;
+                                    font-weight: 700;
+                                    letter-spacing: 1px;
+                                    color: Theme.on-surface-variant;
+                                }
+                                Rectangle {
+                                    height: 54px;
+                                    Flickable {
+                                        width: 100%;
+                                        height: 100%;
+                                        viewport-width: max(self.width, marks-flow.preferred-width);
+                                        viewport-height: self.height;
+
+                                        marks-flow := HorizontalLayout {
+                                            spacing: 8px;
+                                            alignment: start;
+
+                                            for m in root.sel-marks : GradeSquareCard {
+                                                value: m.value;
+                                                date: m.date;
+                                                work: m.work;
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
@@ -3312,24 +3358,6 @@ component GradesView inherits Rectangle {
                                 Text { text: "4 — \{root.sel-n4} шт."; font-size: 12px; font-weight: 600; color: Theme.mark-4; }
                                 Text { text: "3 — \{root.sel-n3} шт."; font-size: 12px; font-weight: 600; color: Theme.mark-3; }
                                 Text { text: "2 — \{root.sel-n2} шт."; font-size: 12px; font-weight: 600; color: Theme.mark-2; }
-                            }
-
-                            // История оценок с типом работы
-                            if root.sel-count > 0 : Text {
-                                text: "История оценок";
-                                font-size: 11px;
-                                font-weight: 700;
-                                letter-spacing: 1px;
-                                color: Theme.on-surface-variant;
-                            }
-                            if root.sel-count > 0 : VerticalLayout {
-                                spacing: 6px;
-                                alignment: start;
-                                for m in root.sel-marks : GradeRow {
-                                    value: m.value;
-                                    date: m.date;
-                                    work: m.work;
-                                }
                             }
                         }
                     }
