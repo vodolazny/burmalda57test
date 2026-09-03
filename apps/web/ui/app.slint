@@ -2071,39 +2071,6 @@ component ProfileView inherits Rectangle {
                     HorizontalLayout {
                         spacing: 16px;
 
-                        // Аватар пользователя (только отображение)
-                        VerticalLayout {
-                            alignment: center;
-                            Rectangle {
-                                width: 64px;
-                                height: 64px;
-                                border-radius: 32px;
-                                background: @linear-gradient(135deg, Theme.primary 0%, Theme.primary-2 100%);
-                                clip: true;
-
-                                if root.has-avatar : Image {
-                                    source: root.avatar;
-                                    width: 100%;
-                                    height: 100%;
-                                    image-fit: cover;
-                                }
-                                if !root.has-avatar : VerticalLayout {
-                                    alignment: center;
-                                    HorizontalLayout {
-                                        alignment: center;
-                                        Path {
-                                            width: 36px;
-                                            height: 36px;
-                                            viewbox-width: 24;
-                                            viewbox-height: 24;
-                                            commands: "M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z";
-                                            fill: #ffffff;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
                         // Текстовая информация об аккаунте (выровнена к левому краю)
                         VerticalLayout {
                             horizontal-stretch: 1;
