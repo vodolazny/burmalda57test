@@ -96,17 +96,53 @@ export global Theme {
     //  БАЗОВЫЕ РОЛИ — задаются из Rust (Material You). Если система их
     //  не отдаёт (API<31), работают дефолты по признаку dark.
     // ================================================================
-    in-out property <bool> dark: false;
+    // Режим темы: 0 — Тёмная, 1 — Светлая, 2 — Системная (по умолчанию)
+    in-out property <int> theme-mode: 2;
+    in-out property <bool> system-dark: false;
+
+    // Результирующий признак dark
+    in-out property <bool> dark: theme-mode == 0 ? true : theme-mode == 1 ? false : system-dark;
+
+    // Акцентный цвет: 0 — Фиолетовый (M3), 1 — Синий, 2 — Зелёный, 3 — Оранжевый
+    in-out property <int> accent-color: 0;
 
     // Accent 1 (primary)
-    in-out property <color> primary:              dark ? #D0BCFF : #6750A4;
-    in-out property <color> on-primary:           dark ? #381E72 : #FFFFFF;
-    in-out property <color> primary-container:    dark ? #4F378B : #EADDFF;
-    in-out property <color> on-primary-container: dark ? #EADDFF : #21005D;
+    in-out property <color> primary:
+        accent-color == 1 ? (dark ? #A8C7FA : #0B57D0) :
+        accent-color == 2 ? (dark ? #7ADA91 : #1B6D36) :
+        accent-color == 3 ? (dark ? #FFB77C : #8F4C00) :
+        (dark ? #D0BCFF : #6750A4);
+
+    in-out property <color> on-primary:
+        accent-color == 1 ? (dark ? #0842A0 : #FFFFFF) :
+        accent-color == 2 ? (dark ? #003915 : #FFFFFF) :
+        accent-color == 3 ? (dark ? #4D2700 : #FFFFFF) :
+        (dark ? #381E72 : #FFFFFF);
+
+    in-out property <color> primary-container:
+        accent-color == 1 ? (dark ? #0842A0 : #D3E3FD) :
+        accent-color == 2 ? (dark ? #005322 : #95F7AB) :
+        accent-color == 3 ? (dark ? #6E3900 : #FFDCC2) :
+        (dark ? #4F378B : #EADDFF);
+
+    in-out property <color> on-primary-container:
+        accent-color == 1 ? (dark ? #D3E3FD : #041E49) :
+        accent-color == 2 ? (dark ? #95F7AB : #00210A) :
+        accent-color == 3 ? (dark ? #FFDCC2 : #2E1500) :
+        (dark ? #EADDFF : #21005D);
 
     // Accent 2 (secondary — tonal-бейджи, навбар-таблетка)
-    in-out property <color> secondary-container:    dark ? #4A4458 : #E8DEF8;
-    in-out property <color> on-secondary-container: dark ? #E8DEF8 : #1D192B;
+    in-out property <color> secondary-container:
+        accent-color == 1 ? (dark ? #004A77 : #C2E7FF) :
+        accent-color == 2 ? (dark ? #2E4E36 : #CCE8D0) :
+        accent-color == 3 ? (dark ? #564032 : #F3DFD1) :
+        (dark ? #4A4458 : #E8DEF8);
+
+    in-out property <color> on-secondary-container:
+        accent-color == 1 ? (dark ? #C2E7FF : #001D35) :
+        accent-color == 2 ? (dark ? #CCE8D0 : #0B1F11) :
+        accent-color == 3 ? (dark ? #F3DFD1 : #24160C) :
+        (dark ? #E8DEF8 : #1D192B);
 
     // Нейтрали (neutral1/neutral2)
     in-out property <color> surface:            dark ? #141218 : #FEF7FF;
@@ -1081,24 +1117,6 @@ component NavItem inherits Rectangle {
     TouchArea { clicked => { root.clicked(); } }
 }
 
-component InfoRow inherits HorizontalLayout {
-    in property <string> label;
-    in property <string> value;
-    spacing: 8px;
-    Text {
-        text: root.label;
-        font-size: 14px;
-        color: Theme.on-surface-variant;
-        width: 92px;
-    }
-    Text {
-        text: root.value;
-        font-size: 14px;
-        font-weight: 600;
-        color: Theme.on-surface;
-        wrap: word-wrap;
-    }
-}
 
 component LoginScreen inherits Rectangle {
     in property <string> login-error;
@@ -1927,6 +1945,42 @@ component DiaryView inherits Rectangle {
 
 }
 
+// Кружок выбора акцентного цвета (Material You)
+component ColorDot inherits Rectangle {
+    in property <color> dot-color;
+    in property <bool> selected;
+    callback clicked();
+
+    width: 38px;
+    height: 38px;
+    border-radius: 19px;
+    background: transparent;
+    border-width: root.selected ? 2px : 0px;
+    border-color: Theme.primary;
+
+    Rectangle {
+        width: 26px;
+        height: 26px;
+        border-radius: 13px;
+        background: root.dot-color;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+
+        if root.selected : Path {
+            width: 14px;
+            height: 14px;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            viewbox-width: 24;
+            viewbox-height: 24;
+            commands: "M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z";
+            fill: #ffffff;
+        }
+    }
+
+    TouchArea { clicked => { root.clicked(); } }
+}
+
 component ProfileView inherits Rectangle {
     in property <string> full-name;
     in property <string> school-name;
@@ -1944,184 +1998,477 @@ component ProfileView inherits Rectangle {
     callback open-child-select();
     background: Theme.background;
 
-    // Десктоп: компактная центрированная колонка фиксированной ширины
-    card-col := VerticalLayout {
-        width: min(parent.width, 560px);
-        x: (parent.width - self.width) / 2;
-        padding: 16px;
-        padding-top: 8px;
-        spacing: 16px;
+    Flickable {
+        width: 100%;
+        height: 100%;
+        viewport-width: self.width;
+        viewport-height: content.preferred-height;
 
-        Rectangle {
-            border-radius: Theme.radius-l;
-            background: Theme.surface-container;
-            height: card.preferred-height + 28px;
-            card := VerticalLayout {
-                padding: 16px;
-                spacing: 10px;
-                HorizontalLayout {
-                    spacing: 14px;
-                    Rectangle {
-                        width: 88px; height: 88px;
-                        // Круглый аватар с обрезкой
-                        Rectangle {
-                            width: 100%; height: 100%; border-radius: 44px;
-                            background: @linear-gradient(135deg, Theme.primary 0%, Theme.primary-2 100%);
-                            clip: true;
-                            if root.has-avatar : Image {
-                                source: root.avatar;
-                                width: 100%; height: 100%;
-                                image-fit: cover;
-                            }
-                            if !root.has-avatar : VerticalLayout {
-                                alignment: center;
-                                HorizontalLayout {
-                                    alignment: center;
-                                    Path {
-                                        width: 48px; height: 48px;
-                                        viewbox-width: 24; viewbox-height: 24;
-                                        commands: "M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z";
-                                        fill: #ffffff;
-                                    }
-                                }
-                            }
-                        }
-                        // Бейдж-камера поверх, в правом нижнем углу
-                        Rectangle {
-                            width: 28px; height: 28px; border-radius: 14px;
-                            background: Theme.surface-container-high;
-                            border-width: 2px; border-color: Theme.surface-container;
-                            x: parent.width - self.width;
-                            y: parent.height - self.height;
-                            VerticalLayout {
-                                alignment: center;
-                                HorizontalLayout {
-                                    alignment: center;
-                                    Path {
-                                        width: 14px; height: 14px;
-                                        viewbox-width: 24; viewbox-height: 24;
-                                        commands: "M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z";
-                                        fill: Theme.on-surface;
-                                    }
-                                }
-                            }
-                        }
-                        TouchArea { clicked => { root.pick-avatar(); } }
-                    }
-                    VerticalLayout {
-                        alignment: center;
-                        spacing: 2px;
-                        Text { text: root.full-name; font-size: 16px; font-weight: 700; color: Theme.on-surface; wrap: word-wrap; }
-                        Text { text: root.school-class + " класс"; font-size: 13px; color: Theme.on-surface-variant; }
-                    }
-                }
-                Rectangle { height: 1px; background: Theme.outline-variant; }
-                InfoRow { label: "Школа"; value: root.school-name; }
-                if root.is-parent && root.parent-name != "" : InfoRow { label: "Родитель"; value: root.parent-name; }
+        content := VerticalLayout {
+            width: min(parent.width - 32px, 700px);
+            x: (parent.width - self.width) / 2;
+            padding-top: 20px;
+            padding-bottom: 40px;
+            spacing: 20px;
+
+            // Заголовок раздела
+            Text {
+                text: "Настройки и профиль";
+                font-size: 24px;
+                font-weight: 800;
+                color: Theme.on-surface;
             }
-        }
 
-        // Кнопка выбора ребёнка (для родителей с несколькими детьми)
-        if root.is-parent && root.children-list.length > 1 : Rectangle {
-            border-radius: Theme.radius-l;
-            background: Theme.surface-container;
-            height: child-btn-layout.preferred-height + 24px;
+            // ==========================================
+            // 1. КАРТОЧКА АККАУНТА (собрана воедино)
+            // ==========================================
+            Rectangle {
+                border-radius: Theme.radius-l;
+                background: Theme.surface-container;
+                border-width: 1px;
+                border-color: Theme.outline-variant;
+                drop-shadow-blur: 12px;
+                drop-shadow-color: Theme.shadow;
+                drop-shadow-offset-y: 2px;
 
-            child-btn-layout := VerticalLayout {
-                padding: 14px;
-                spacing: 6px;
+                VerticalLayout {
+                    padding: 20px;
+                    spacing: 16px;
 
-                HorizontalLayout {
-                    spacing: 12px;
-                    VerticalLayout {
+                    HorizontalLayout {
+                        spacing: 16px;
                         alignment: center;
+
+                        // Аватар пользователя
                         Rectangle {
-                            width: 40px;
-                            height: 40px;
-                            border-radius: 20px;
-                            background: Theme.primary-container;
+                            width: 68px;
+                            height: 68px;
+
+                            Rectangle {
+                                width: 100%;
+                                height: 100%;
+                                border-radius: 34px;
+                                background: @linear-gradient(135deg, Theme.primary 0%, Theme.primary-2 100%);
+                                clip: true;
+
+                                if root.has-avatar : Image {
+                                    source: root.avatar;
+                                    width: 100%;
+                                    height: 100%;
+                                    image-fit: cover;
+                                }
+                                if !root.has-avatar : VerticalLayout {
+                                    alignment: center;
+                                    HorizontalLayout {
+                                        alignment: center;
+                                        Path {
+                                            width: 38px;
+                                            height: 38px;
+                                            viewbox-width: 24;
+                                            viewbox-height: 24;
+                                            commands: "M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z";
+                                            fill: #ffffff;
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Бейдж камеры для смены аватара
+                            Rectangle {
+                                width: 24px;
+                                height: 24px;
+                                border-radius: 12px;
+                                background: Theme.surface-container-high;
+                                border-width: 2px;
+                                border-color: Theme.surface-container;
+                                x: parent.width - self.width;
+                                y: parent.height - self.height;
+
+                                VerticalLayout {
+                                    alignment: center;
+                                    HorizontalLayout {
+                                        alignment: center;
+                                        Path {
+                                            width: 12px;
+                                            height: 12px;
+                                            viewbox-width: 24;
+                                            viewbox-height: 24;
+                                            commands: "M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z";
+                                            fill: Theme.on-surface;
+                                        }
+                                    }
+                                }
+                            }
+
+                            TouchArea { clicked => { root.pick-avatar(); } }
+                        }
+
+                        // Текстовая информация об аккаунте
+                        VerticalLayout {
+                            horizontal-stretch: 1;
+                            alignment: center;
+                            spacing: 3px;
+
+                            Text {
+                                text: root.full-name;
+                                font-size: 17px;
+                                font-weight: 800;
+                                color: Theme.on-surface;
+                                wrap: word-wrap;
+                            }
+                            Text {
+                                text: (root.school-class != "" ? root.school-class + " класс · " : "") + root.school-name;
+                                font-size: 13px;
+                                font-weight: 500;
+                                color: Theme.on-surface-variant;
+                                wrap: word-wrap;
+                            }
+                            if root.is-parent && root.parent-name != "" : Text {
+                                text: "Родитель: " + root.parent-name;
+                                font-size: 12px;
+                                color: Theme.on-surface-variant;
+                            }
+                        }
+
+                        // Компактная кнопка «Выйти» с красным акцентом
+                        Rectangle {
+                            height: 36px;
+                            border-radius: 18px;
+                            background: logout-ta.pressed
+                                ? Theme.error-container.darker(0.1)
+                                : Theme.error-container.transparentize(0.5);
+                            border-width: 1px;
+                            border-color: Theme.error.transparentize(0.65);
+                            animate background { duration: 120ms; }
+
+                            HorizontalLayout {
+                                padding-left: 14px;
+                                padding-right: 14px;
+                                spacing: 6px;
+                                alignment: center;
+
+                                Path {
+                                    width: 15px;
+                                    height: 15px;
+                                    viewbox-width: 24;
+                                    viewbox-height: 24;
+                                    commands: "M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1";
+                                    stroke: Theme.error;
+                                    stroke-width: 2px;
+                                    fill: transparent;
+                                }
+                                Text {
+                                    text: "Выйти";
+                                    font-size: 13px;
+                                    font-weight: 700;
+                                    color: Theme.error;
+                                    vertical-alignment: center;
+                                }
+                            }
+                            logout-ta := TouchArea { clicked => { root.logout(); } }
+                        }
+                    }
+
+                    // Переключатель ребёнка для родительских аккаунтов
+                    if root.is-parent && root.children-list.length > 1 : Rectangle {
+                        height: 1px;
+                        background: Theme.outline-variant;
+                    }
+                    if root.is-parent && root.children-list.length > 1 : Rectangle {
+                        height: 44px;
+                        border-radius: Theme.radius-m;
+                        background: child-ta.pressed ? Theme.surface-container-high : Theme.surface-container-low;
+                        border-width: 1px;
+                        border-color: Theme.outline-variant;
+                        animate background { duration: 120ms; }
+
+                        HorizontalLayout {
+                            padding-left: 14px;
+                            padding-right: 14px;
+                            spacing: 10px;
+                            alignment: center;
+
                             Path {
-                                width: 22px;
-                                height: 22px;
-                                x: (parent.width - self.width) / 2;
-                                y: (parent.height - self.height) / 2;
+                                width: 18px;
+                                height: 18px;
                                 viewbox-width: 24;
                                 viewbox-height: 24;
                                 commands: "M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z";
-                                fill: Theme.on-primary-container;
+                                fill: Theme.primary;
+                            }
+                            Text {
+                                horizontal-stretch: 1;
+                                text: "Сменить ребёнка (текущий: " + root.full-name + ")";
+                                font-size: 13px;
+                                font-weight: 600;
+                                color: Theme.on-surface;
+                                overflow: elide;
+                                vertical-alignment: center;
+                            }
+                            Path {
+                                width: 16px;
+                                height: 16px;
+                                viewbox-width: 24;
+                                viewbox-height: 24;
+                                commands: "M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z";
+                                fill: Theme.on-surface-variant;
+                            }
+                        }
+                        child-ta := TouchArea { clicked => { root.open-child-select(); } }
+                    }
+                }
+            }
+
+            // ==========================================
+            // 2. БЛОК «ВНЕШНИЙ ВИД» (Кастомизация M3)
+            // ==========================================
+            VerticalLayout {
+                spacing: 8px;
+
+                Text {
+                    text: "Внешний вид";
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: Theme.on-surface-variant;
+                }
+
+                Rectangle {
+                    border-radius: Theme.radius-l;
+                    background: Theme.surface-container;
+                    border-width: 1px;
+                    border-color: Theme.outline-variant;
+                    drop-shadow-blur: 12px;
+                    drop-shadow-color: Theme.shadow;
+                    drop-shadow-offset-y: 2px;
+
+                    VerticalLayout {
+                        padding: 18px;
+                        spacing: 16px;
+
+                        // Выбор темы оформления
+                        HorizontalLayout {
+                            spacing: 12px;
+                            alignment: center;
+
+                            VerticalLayout {
+                                horizontal-stretch: 1;
+                                alignment: center;
+                                spacing: 2px;
+
+                                Text {
+                                    text: "Тема оформления";
+                                    font-size: 15px;
+                                    font-weight: 600;
+                                    color: Theme.on-surface;
+                                }
+                                Text {
+                                    text: Theme.theme-mode == 0 ? "Тёмная тема"
+                                        : Theme.theme-mode == 1 ? "Светлая тема"
+                                        : "Следовать настройкам системы";
+                                    font-size: 12px;
+                                    color: Theme.on-surface-variant;
+                                }
+                            }
+
+                            SegmentedButtons {
+                                width: 280px;
+                                options: ["Тёмная", "Светлая", "Системная"];
+                                selected: Theme.theme-mode;
+                                select(i) => { Theme.theme-mode = i; }
+                            }
+                        }
+
+                        Rectangle { height: 1px; background: Theme.outline-variant; }
+
+                        // Акцентный цвет (Material You / Dynamic Color)
+                        HorizontalLayout {
+                            spacing: 12px;
+                            alignment: center;
+
+                            VerticalLayout {
+                                horizontal-stretch: 1;
+                                alignment: center;
+                                spacing: 2px;
+
+                                Text {
+                                    text: "Акцентный цвет";
+                                    font-size: 15px;
+                                    font-weight: 600;
+                                    color: Theme.on-surface;
+                                }
+                                Text {
+                                    text: "Dynamic Color (Material You)";
+                                    font-size: 12px;
+                                    color: Theme.on-surface-variant;
+                                }
+                            }
+
+                            HorizontalLayout {
+                                spacing: 8px;
+                                alignment: center;
+
+                                ColorDot {
+                                    dot-color: #6750A4;
+                                    selected: Theme.accent-color == 0;
+                                    clicked => { Theme.accent-color = 0; }
+                                }
+                                ColorDot {
+                                    dot-color: #0B57D0;
+                                    selected: Theme.accent-color == 1;
+                                    clicked => { Theme.accent-color = 1; }
+                                }
+                                ColorDot {
+                                    dot-color: #1B6D36;
+                                    selected: Theme.accent-color == 2;
+                                    clicked => { Theme.accent-color = 2; }
+                                }
+                                ColorDot {
+                                    dot-color: #8F4C00;
+                                    selected: Theme.accent-color == 3;
+                                    clicked => { Theme.accent-color = 3; }
+                                }
                             }
                         }
                     }
-
-                    VerticalLayout {
-                        alignment: center;
-                        spacing: 2px;
-                        horizontal-stretch: 1;
-                        Text {
-                            text: "Выбрать ребёнка";
-                            font-size: 15px;
-                            font-weight: 600;
-                            color: Theme.on-surface;
-                        }
-                        Text {
-                            text: "Текущий: " + root.full-name;
-                            font-size: 12px;
-                            color: Theme.on-surface-variant;
-                            overflow: elide;
-                            wrap: no-wrap;
-                        }
-                    }
-
-                    VerticalLayout {
-                        alignment: center;
-                        Path {
-                            width: 20px;
-                            height: 20px;
-                            viewbox-width: 24;
-                            viewbox-height: 24;
-                            commands: "M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z";
-                            fill: Theme.on-surface-variant;
-                        }
-                    }
                 }
             }
 
-            TouchArea {
-                clicked => { root.open-child-select(); }
-            }
-        }
+            // ==========================================
+            // 3. БЛОК «О ПРОГРАММЕ»
+            // ==========================================
+            VerticalLayout {
+                spacing: 8px;
 
-        MaterialButton {
-            height: 48px;
-            text: "Выйти";
-            filled: false;
-            clicked => { root.logout(); }
-        }
-
-        Rectangle { vertical-stretch: 1; }
-
-        // Подпись + кликабельная ссылка на GitHub
-        VerticalLayout {
-            spacing: 3px;
-            Text {
-                text: "Неофициальный клиент Образования 57";
-                font-size: 11px; color: Theme.on-surface-variant;
-                horizontal-alignment: center;
-            }
-            Text {
-                text: "made in rust + slint";
-                font-size: 11px; color: Theme.on-surface-variant;
-                horizontal-alignment: center;
-            }
-            TouchArea {
-                height: linkText.preferred-height;
-                linkText := Text {
-                    text: "github.com/vodolazny/burmalda57";
-                    font-size: 11px; color: Theme.primary;
-                    width: 100%;
-                    horizontal-alignment: center;
+                Text {
+                    text: "О программе";
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: Theme.on-surface-variant;
                 }
-                clicked => { root.open-url("https://github.com/vodolazny/burmalda57"); }
+
+                Rectangle {
+                    border-radius: Theme.radius-l;
+                    background: Theme.surface-container;
+                    border-width: 1px;
+                    border-color: Theme.outline-variant;
+                    drop-shadow-blur: 12px;
+                    drop-shadow-color: Theme.shadow;
+                    drop-shadow-offset-y: 2px;
+
+                    VerticalLayout {
+                        padding: 18px;
+                        spacing: 16px;
+
+                        // Название и стек технологий
+                        HorizontalLayout {
+                            spacing: 14px;
+                            alignment: center;
+
+                            Rectangle {
+                                width: 44px;
+                                height: 44px;
+                                border-radius: 12px;
+                                background: @linear-gradient(135deg, Theme.primary 0%, Theme.primary-2 100%);
+
+                                VerticalLayout {
+                                    alignment: center;
+                                    HorizontalLayout {
+                                        alignment: center;
+                                        Path {
+                                            width: 24px;
+                                            height: 24px;
+                                            viewbox-width: 24;
+                                            viewbox-height: 24;
+                                            commands: "M12 3L1 9l11 6 9-4.91V17h2V9L12 3z M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z";
+                                            fill: #ffffff;
+                                        }
+                                    }
+                                }
+                            }
+
+                            VerticalLayout {
+                                horizontal-stretch: 1;
+                                alignment: center;
+                                spacing: 2px;
+
+                                Text {
+                                    text: "OpenDiary57 · v1.4.2";
+                                    font-size: 15px;
+                                    font-weight: 700;
+                                    color: Theme.on-surface;
+                                }
+                                Text {
+                                    text: "Стек: WebAssembly · Rust + Slint · Material 3";
+                                    font-size: 12px;
+                                    color: Theme.on-surface-variant;
+                                }
+                            }
+                        }
+
+                        Rectangle { height: 1px; background: Theme.outline-variant; }
+
+                        // Исходный код на GitHub
+                        HorizontalLayout {
+                            spacing: 12px;
+                            alignment: center;
+
+                            VerticalLayout {
+                                horizontal-stretch: 1;
+                                alignment: center;
+                                spacing: 2px;
+
+                                Text {
+                                    text: "Исходный код на GitHub";
+                                    font-size: 14px;
+                                    font-weight: 600;
+                                    color: Theme.on-surface;
+                                }
+                                Text {
+                                    text: "github.com/vodolazny/burmalda57";
+                                    font-size: 12px;
+                                    color: Theme.primary;
+                                }
+                            }
+
+                            Rectangle {
+                                height: 36px;
+                                border-radius: 18px;
+                                background: gh-ta.pressed ? Theme.secondary-container.darker(0.08) : Theme.secondary-container;
+                                border-width: 1px;
+                                border-color: Theme.outline-variant;
+                                animate background { duration: 120ms; }
+
+                                HorizontalLayout {
+                                    padding-left: 16px;
+                                    padding-right: 14px;
+                                    spacing: 6px;
+                                    alignment: center;
+
+                                    Text {
+                                        text: "Открыть";
+                                        font-size: 13px;
+                                        font-weight: 600;
+                                        color: Theme.on-secondary-container;
+                                        vertical-alignment: center;
+                                    }
+                                    Path {
+                                        width: 14px;
+                                        height: 14px;
+                                        viewbox-width: 24;
+                                        viewbox-height: 24;
+                                        commands: "M10 6 L16 12 L10 18";
+                                        stroke: Theme.on-secondary-container;
+                                        stroke-width: 2px;
+                                        fill: transparent;
+                                    }
+                                }
+                                gh-ta := TouchArea {
+                                    clicked => { root.open-url("https://github.com/vodolazny/burmalda57"); }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -3928,7 +4275,7 @@ export component AppWindow inherits Window {
                 NavItem {
                     height: 64px;
                     wide: root.rail-expanded;
-                    icon-id: 2; label: "Профиль"; selected: root.tab == 2;
+                    icon-id: 2; label: "Настройки"; selected: root.tab == 2;
                     clicked => { root.tab = 2; }
                 }
 

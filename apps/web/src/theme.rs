@@ -11,6 +11,6 @@ pub(crate) fn apply_system_theme(ui: &AppWindow) {
         .unwrap_or(false);
 
     let theme = ui.global::<Theme>();
-    theme.set_dark(dark);
+    theme.set_system_dark(dark);
 }
 
