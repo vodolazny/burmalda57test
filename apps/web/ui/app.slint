@@ -2036,6 +2036,7 @@ component ProfileView inherits Rectangle {
                 font-size: 24px;
                 font-weight: 800;
                 color: Theme.on-surface;
+                horizontal-alignment: left;
             }
 
             // ==========================================
@@ -2056,49 +2057,52 @@ component ProfileView inherits Rectangle {
 
                     HorizontalLayout {
                         spacing: 16px;
-                        alignment: center;
 
                         // Аватар пользователя (только отображение)
-                        Rectangle {
-                            width: 64px;
-                            height: 64px;
-                            border-radius: 32px;
-                            background: @linear-gradient(135deg, Theme.primary 0%, Theme.primary-2 100%);
-                            clip: true;
+                        VerticalLayout {
+                            alignment: center;
+                            Rectangle {
+                                width: 64px;
+                                height: 64px;
+                                border-radius: 32px;
+                                background: @linear-gradient(135deg, Theme.primary 0%, Theme.primary-2 100%);
+                                clip: true;
 
-                            if root.has-avatar : Image {
-                                source: root.avatar;
-                                width: 100%;
-                                height: 100%;
-                                image-fit: cover;
-                            }
-                            if !root.has-avatar : VerticalLayout {
-                                alignment: center;
-                                HorizontalLayout {
+                                if root.has-avatar : Image {
+                                    source: root.avatar;
+                                    width: 100%;
+                                    height: 100%;
+                                    image-fit: cover;
+                                }
+                                if !root.has-avatar : VerticalLayout {
                                     alignment: center;
-                                    Path {
-                                        width: 36px;
-                                        height: 36px;
-                                        viewbox-width: 24;
-                                        viewbox-height: 24;
-                                        commands: "M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z";
-                                        fill: #ffffff;
+                                    HorizontalLayout {
+                                        alignment: center;
+                                        Path {
+                                            width: 36px;
+                                            height: 36px;
+                                            viewbox-width: 24;
+                                            viewbox-height: 24;
+                                            commands: "M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z";
+                                            fill: #ffffff;
+                                        }
                                     }
                                 }
                             }
                         }
 
-                        // Текстовая информация об аккаунте
+                        // Текстовая информация об аккаунте (выровнена к левому краю)
                         VerticalLayout {
                             horizontal-stretch: 1;
                             alignment: center;
-                            spacing: 3px;
+                            spacing: 4px;
 
                             Text {
                                 text: root.full-name;
                                 font-size: 17px;
                                 font-weight: 800;
                                 color: Theme.on-surface;
+                                horizontal-alignment: left;
                                 wrap: word-wrap;
                             }
                             Text {
@@ -2106,60 +2110,66 @@ component ProfileView inherits Rectangle {
                                 font-size: 13px;
                                 font-weight: 500;
                                 color: Theme.on-surface-variant;
+                                horizontal-alignment: left;
                                 wrap: word-wrap;
                             }
                             if root.is-parent && root.parent-name != "" : Text {
                                 text: "Родитель: " + root.parent-name;
                                 font-size: 12px;
                                 color: Theme.on-surface-variant;
+                                horizontal-alignment: left;
                             }
                         }
 
-                        // Компактная кнопка «Выйти» с красным акцентом (иконка выровнена слева)
-                        Rectangle {
-                            height: 36px;
-                            border-radius: 18px;
-                            background: logout-ta.pressed
-                                ? Theme.error-container.darker(0.1)
-                                : Theme.error-container.transparentize(0.5);
-                            border-width: 1px;
-                            border-color: Theme.error.transparentize(0.65);
-                            animate background { duration: 120ms; }
+                        // Кнопка «Выйти» (по центру строки по вертикали, не задрана вверх)
+                        VerticalLayout {
+                            alignment: center;
+                            Rectangle {
+                                height: 36px;
+                                border-radius: 18px;
+                                background: logout-ta.pressed
+                                    ? Theme.error-container.darker(0.1)
+                                    : Theme.error-container.transparentize(0.5);
+                                border-width: 1px;
+                                border-color: Theme.error.transparentize(0.65);
+                                animate background { duration: 120ms; }
 
-                            HorizontalLayout {
-                                padding-left: 14px;
-                                padding-right: 14px;
-                                spacing: 8px;
-                                alignment: start;
-
-                                VerticalLayout {
+                                HorizontalLayout {
+                                    padding-left: 14px;
+                                    padding-right: 14px;
+                                    spacing: 8px;
                                     alignment: center;
-                                    Path {
-                                        width: 15px;
-                                        height: 15px;
-                                        viewbox-width: 24;
-                                        viewbox-height: 24;
-                                        commands: "M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1";
-                                        stroke: Theme.error;
-                                        stroke-width: 2px;
-                                        fill: transparent;
+
+                                    VerticalLayout {
+                                        alignment: center;
+                                        Path {
+                                            width: 15px;
+                                            height: 15px;
+                                            viewbox-width: 24;
+                                            viewbox-height: 24;
+                                            commands: "M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1";
+                                            stroke: Theme.error;
+                                            stroke-width: 2px;
+                                            fill: transparent;
+                                        }
+                                    }
+                                    VerticalLayout {
+                                        alignment: center;
+                                        Text {
+                                            text: "Выйти";
+                                            font-size: 13px;
+                                            font-weight: 700;
+                                            color: Theme.error;
+                                            horizontal-alignment: left;
+                                        }
                                     }
                                 }
-                                VerticalLayout {
-                                    alignment: center;
-                                    Text {
-                                        text: "Выйти";
-                                        font-size: 13px;
-                                        font-weight: 700;
-                                        color: Theme.error;
-                                    }
-                                }
+                                logout-ta := TouchArea { clicked => { root.logout(); } }
                             }
-                            logout-ta := TouchArea { clicked => { root.logout(); } }
                         }
                     }
 
-                    // Переключатель ребёнка для родительских аккаунтов (выровнен к левому краю)
+                    // Переключатель ребёнка для родительских аккаунтов
                     if root.is-parent && root.children-list.length > 1 : Rectangle {
                         height: 1px;
                         background: Theme.outline-variant;
@@ -2198,6 +2208,7 @@ component ProfileView inherits Rectangle {
                                     font-weight: 600;
                                     color: Theme.on-surface;
                                     overflow: elide;
+                                    horizontal-alignment: left;
                                 }
                             }
                             VerticalLayout {
@@ -2228,6 +2239,7 @@ component ProfileView inherits Rectangle {
                     font-size: 14px;
                     font-weight: 700;
                     color: Theme.on-surface-variant;
+                    horizontal-alignment: left;
                 }
 
                 Rectangle {
@@ -2246,7 +2258,6 @@ component ProfileView inherits Rectangle {
                         // Выбор темы оформления
                         HorizontalLayout {
                             spacing: 12px;
-                            alignment: center;
 
                             VerticalLayout {
                                 horizontal-stretch: 1;
@@ -2258,6 +2269,7 @@ component ProfileView inherits Rectangle {
                                     font-size: 15px;
                                     font-weight: 600;
                                     color: Theme.on-surface;
+                                    horizontal-alignment: left;
                                 }
                                 Text {
                                     text: Theme.theme-mode == 0 ? "Тёмная тема"
@@ -2265,14 +2277,18 @@ component ProfileView inherits Rectangle {
                                         : "Следовать настройкам системы";
                                     font-size: 12px;
                                     color: Theme.on-surface-variant;
+                                    horizontal-alignment: left;
                                 }
                             }
 
-                            SegmentedButtons {
-                                width: 280px;
-                                options: ["Тёмная", "Светлая", "Системная"];
-                                selected: Theme.theme-mode;
-                                select(i) => { Theme.theme-mode = i; }
+                            VerticalLayout {
+                                alignment: center;
+                                SegmentedButtons {
+                                    width: 280px;
+                                    options: ["Тёмная", "Светлая", "Системная"];
+                                    selected: Theme.theme-mode;
+                                    select(i) => { Theme.theme-mode = i; }
+                                }
                             }
                         }
 
@@ -2281,7 +2297,6 @@ component ProfileView inherits Rectangle {
                         // Акцентный цвет
                         HorizontalLayout {
                             spacing: 12px;
-                            alignment: center;
 
                             VerticalLayout {
                                 horizontal-stretch: 1;
@@ -2292,32 +2307,36 @@ component ProfileView inherits Rectangle {
                                     font-size: 15px;
                                     font-weight: 600;
                                     color: Theme.on-surface;
+                                    horizontal-alignment: left;
                                 }
                             }
 
-                            HorizontalLayout {
-                                spacing: 8px;
+                            VerticalLayout {
                                 alignment: center;
+                                HorizontalLayout {
+                                    spacing: 8px;
+                                    alignment: center;
 
-                                ColorDot {
-                                    dot-color: #6750A4;
-                                    selected: Theme.accent-color == 0;
-                                    clicked => { Theme.accent-color = 0; }
-                                }
-                                ColorDot {
-                                    dot-color: #0B57D0;
-                                    selected: Theme.accent-color == 1;
-                                    clicked => { Theme.accent-color = 1; }
-                                }
-                                ColorDot {
-                                    dot-color: #1B6D36;
-                                    selected: Theme.accent-color == 2;
-                                    clicked => { Theme.accent-color = 2; }
-                                }
-                                ColorDot {
-                                    dot-color: #8F4C00;
-                                    selected: Theme.accent-color == 3;
-                                    clicked => { Theme.accent-color = 3; }
+                                    ColorDot {
+                                        dot-color: #6750A4;
+                                        selected: Theme.accent-color == 0;
+                                        clicked => { Theme.accent-color = 0; }
+                                    }
+                                    ColorDot {
+                                        dot-color: #0B57D0;
+                                        selected: Theme.accent-color == 1;
+                                        clicked => { Theme.accent-color = 1; }
+                                    }
+                                    ColorDot {
+                                        dot-color: #1B6D36;
+                                        selected: Theme.accent-color == 2;
+                                        clicked => { Theme.accent-color = 2; }
+                                    }
+                                    ColorDot {
+                                        dot-color: #8F4C00;
+                                        selected: Theme.accent-color == 3;
+                                        clicked => { Theme.accent-color = 3; }
+                                    }
                                 }
                             }
                         }
@@ -2336,6 +2355,7 @@ component ProfileView inherits Rectangle {
                     font-size: 14px;
                     font-weight: 700;
                     color: Theme.on-surface-variant;
+                    horizontal-alignment: left;
                 }
 
                 Rectangle {
@@ -2354,25 +2374,27 @@ component ProfileView inherits Rectangle {
                         // Название и стек технологий
                         HorizontalLayout {
                             spacing: 14px;
-                            alignment: center;
 
-                            Rectangle {
-                                width: 44px;
-                                height: 44px;
-                                border-radius: 12px;
-                                background: @linear-gradient(135deg, Theme.primary 0%, Theme.primary-2 100%);
+                            VerticalLayout {
+                                alignment: center;
+                                Rectangle {
+                                    width: 44px;
+                                    height: 44px;
+                                    border-radius: 12px;
+                                    background: @linear-gradient(135deg, Theme.primary 0%, Theme.primary-2 100%);
 
-                                VerticalLayout {
-                                    alignment: center;
-                                    HorizontalLayout {
+                                    VerticalLayout {
                                         alignment: center;
-                                        Path {
-                                            width: 24px;
-                                            height: 24px;
-                                            viewbox-width: 24;
-                                            viewbox-height: 24;
-                                            commands: "M12 3L1 9l11 6 9-4.91V17h2V9L12 3z M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z";
-                                            fill: #ffffff;
+                                        HorizontalLayout {
+                                            alignment: center;
+                                            Path {
+                                                width: 24px;
+                                                height: 24px;
+                                                viewbox-width: 24;
+                                                viewbox-height: 24;
+                                                commands: "M12 3L1 9l11 6 9-4.91V17h2V9L12 3z M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z";
+                                                fill: #ffffff;
+                                            }
                                         }
                                     }
                                 }
@@ -2388,11 +2410,13 @@ component ProfileView inherits Rectangle {
                                     font-size: 15px;
                                     font-weight: 700;
                                     color: Theme.on-surface;
+                                    horizontal-alignment: left;
                                 }
                                 Text {
                                     text: "Стек: WebAssembly · Rust + Slint · Material 3";
                                     font-size: 12px;
                                     color: Theme.on-surface-variant;
+                                    horizontal-alignment: left;
                                 }
                             }
                         }
@@ -2402,7 +2426,6 @@ component ProfileView inherits Rectangle {
                         // Исходный код на GitHub
                         HorizontalLayout {
                             spacing: 12px;
-                            alignment: center;
 
                             VerticalLayout {
                                 horizontal-stretch: 1;
@@ -2414,53 +2437,59 @@ component ProfileView inherits Rectangle {
                                     font-size: 14px;
                                     font-weight: 600;
                                     color: Theme.on-surface;
+                                    horizontal-alignment: left;
                                 }
                                 Text {
                                     text: "github.com/vodolazny/burmalda57";
                                     font-size: 12px;
                                     color: Theme.primary;
+                                    horizontal-alignment: left;
                                 }
                             }
 
-                            Rectangle {
-                                height: 36px;
-                                border-radius: 18px;
-                                background: gh-ta.pressed ? Theme.secondary-container.darker(0.08) : Theme.secondary-container;
-                                border-width: 1px;
-                                border-color: Theme.outline-variant;
-                                animate background { duration: 120ms; }
+                            VerticalLayout {
+                                alignment: center;
+                                Rectangle {
+                                    height: 36px;
+                                    border-radius: 18px;
+                                    background: gh-ta.pressed ? Theme.secondary-container.darker(0.08) : Theme.secondary-container;
+                                    border-width: 1px;
+                                    border-color: Theme.outline-variant;
+                                    animate background { duration: 120ms; }
 
-                                HorizontalLayout {
-                                    padding-left: 14px;
-                                    padding-right: 14px;
-                                    spacing: 6px;
-                                    alignment: start;
-
-                                    VerticalLayout {
+                                    HorizontalLayout {
+                                        padding-left: 14px;
+                                        padding-right: 14px;
+                                        spacing: 6px;
                                         alignment: center;
-                                        Text {
-                                            text: "Открыть";
-                                            font-size: 13px;
-                                            font-weight: 600;
-                                            color: Theme.on-secondary-container;
+
+                                        VerticalLayout {
+                                            alignment: center;
+                                            Text {
+                                                text: "Открыть";
+                                                font-size: 13px;
+                                                font-weight: 600;
+                                                color: Theme.on-secondary-container;
+                                                horizontal-alignment: left;
+                                            }
+                                        }
+                                        VerticalLayout {
+                                            alignment: center;
+                                            Path {
+                                                width: 14px;
+                                                height: 14px;
+                                                viewbox-width: 24;
+                                                viewbox-height: 24;
+                                                commands: "M10 6 L16 12 L10 18";
+                                                stroke: Theme.on-secondary-container;
+                                                stroke-width: 2px;
+                                                fill: transparent;
+                                            }
                                         }
                                     }
-                                    VerticalLayout {
-                                        alignment: center;
-                                        Path {
-                                            width: 14px;
-                                            height: 14px;
-                                            viewbox-width: 24;
-                                            viewbox-height: 24;
-                                            commands: "M10 6 L16 12 L10 18";
-                                            stroke: Theme.on-secondary-container;
-                                            stroke-width: 2px;
-                                            fill: transparent;
-                                        }
+                                    gh-ta := TouchArea {
+                                        clicked => { root.open-url("https://github.com/vodolazny/burmalda57"); }
                                     }
-                                }
-                                gh-ta := TouchArea {
-                                    clicked => { root.open-url("https://github.com/vodolazny/burmalda57"); }
                                 }
                             }
                         }
