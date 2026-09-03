@@ -388,19 +388,19 @@ component MarkToken inherits Rectangle {
     in property <string> text;
     in property <int> value;
     in property <length> size: 44px;
-    in property <length> font: 20px;
+    in property <length> font: 18px;
 
     property <color> fg: mc.fg;
     mc := MarkColor { value: root.value; }
 
-    width: root.size;
+    width: max(root.size, txt.preferred-width + 16px);
     height: root.size;
     border-radius: root.size / 4;
     background: root.fg.transparentize(0.88);
     border-width: 1px;
     border-color: root.fg.transparentize(0.7);
 
-    Text {
+    txt := Text {
         width: 100%; height: 100%;
         text: root.text;
         font-size: root.font;
@@ -2307,47 +2307,55 @@ component ProfileView inherits Rectangle {
 
                         Rectangle { height: 1px; background: Theme.outline-variant; }
 
-                        // Акцентный цвет (сдвинут влево)
-                        VerticalLayout {
-                            spacing: 10px;
+                        // Акцентный цвет (сдвинут вправо к боку)
+                        HorizontalLayout {
+                            spacing: 12px;
 
-                            Text {
-                                text: "Акцентный цвет";
-                                font-size: 15px;
-                                font-weight: 600;
-                                color: Theme.on-surface;
-                                horizontal-alignment: left;
+                            VerticalLayout {
+                                horizontal-stretch: 1;
+                                alignment: center;
+
+                                Text {
+                                    text: "Акцентный цвет";
+                                    font-size: 15px;
+                                    font-weight: 600;
+                                    color: Theme.on-surface;
+                                    horizontal-alignment: left;
+                                }
                             }
 
-                            HorizontalLayout {
-                                spacing: 10px;
-                                alignment: start;
+                            VerticalLayout {
+                                alignment: center;
+                                HorizontalLayout {
+                                    spacing: 8px;
+                                    alignment: end;
 
-                                ColorDot {
-                                    dot-color: #6750A4;
-                                    selected: Theme.accent-color == 0;
-                                    clicked => { Theme.accent-color = 0; }
-                                }
-                                ColorDot {
-                                    dot-color: #0B57D0;
-                                    selected: Theme.accent-color == 1;
-                                    clicked => { Theme.accent-color = 1; }
-                                }
-                                ColorDot {
-                                    dot-color: #1B6D36;
-                                    selected: Theme.accent-color == 2;
-                                    clicked => { Theme.accent-color = 2; }
-                                }
-                                ColorDot {
-                                    dot-color: #8F4C00;
-                                    selected: Theme.accent-color == 3;
-                                    clicked => { Theme.accent-color = 3; }
-                                }
-                                ColorDot {
-                                    dot-color: #555555;
-                                    is-bw: true;
-                                    selected: Theme.accent-color == 4;
-                                    clicked => { Theme.accent-color = 4; }
+                                    ColorDot {
+                                        dot-color: #6750A4;
+                                        selected: Theme.accent-color == 0;
+                                        clicked => { Theme.accent-color = 0; }
+                                    }
+                                    ColorDot {
+                                        dot-color: #0B57D0;
+                                        selected: Theme.accent-color == 1;
+                                        clicked => { Theme.accent-color = 1; }
+                                    }
+                                    ColorDot {
+                                        dot-color: #1B6D36;
+                                        selected: Theme.accent-color == 2;
+                                        clicked => { Theme.accent-color = 2; }
+                                    }
+                                    ColorDot {
+                                        dot-color: #8F4C00;
+                                        selected: Theme.accent-color == 3;
+                                        clicked => { Theme.accent-color = 3; }
+                                    }
+                                    ColorDot {
+                                        dot-color: #555555;
+                                        is-bw: true;
+                                        selected: Theme.accent-color == 4;
+                                        clicked => { Theme.accent-color = 4; }
+                                    }
                                 }
                             }
                         }

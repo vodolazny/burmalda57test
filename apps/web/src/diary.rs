@@ -169,10 +169,31 @@ fn parse_diary(raw: &str) -> Vec<UiLesson> {
             let mark = l
                 .marks
                 .iter()
-                .map(|m| m.short_name.clone())
+                .map(|m| {
+                    let s = m.short_name.trim();
+                    if !s.is_empty() {
+                        s.to_string()
+                    } else if m.value > 0 {
+                        m.value.to_string()
+                    } else {
+                        String::new()
+                    }
+                })
+                .filter(|s| !s.is_empty())
                 .collect::<Vec<_>>()
-                .join(" ");
-            let mark_value = l.marks.first().map(|m| m.value).unwrap_or(0);
+                .join("/");
+            let mark_value = l
+                .marks
+                .iter()
+                .map(|m| {
+                    if m.value > 0 {
+                        m.value
+                    } else {
+                        m.short_name.trim().parse::<i32>().unwrap_or(0)
+                    }
+                })
+                .find(|&v| v > 0)
+                .unwrap_or(0);
             let time = if l.time_end.is_empty() {
                 l.time_begin.clone()
             } else {
