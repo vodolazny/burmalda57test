@@ -15,9 +15,9 @@ wasm-bindgen \
 
 if command -v wasm-opt &> /dev/null; then
     echo "==> Оптимизация размера WASM (wasm-opt -Oz)..."
-    wasm-opt -Oz --strip-debug -o "$SCRIPT_DIR/web/pkg/burmalda57_bg.wasm" "$SCRIPT_DIR/web/pkg/burmalda57_bg.wasm"
+    wasm-opt --all-features -Oz --strip-debug -o "$SCRIPT_DIR/web/pkg/burmalda57_bg.wasm" "$SCRIPT_DIR/web/pkg/burmalda57_bg.wasm"
 else
-    echo "==> Подсказка: установите wasm-opt (binaryen) для дополнительного сжатия .wasm на 15-30%"
+    echo "==> Подсказка: wasm-opt не найден, пропускаем post-оптимизацию"
 fi
 
 echo ""

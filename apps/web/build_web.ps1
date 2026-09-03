@@ -18,9 +18,9 @@ wasm-bindgen `
 # 3. Дополнительная оптимизация размера (wasm-opt из Binaryen), если установлена
 if (Get-Command wasm-opt -ErrorAction SilentlyContinue) {
     Write-Host "==> Оптимизация размера WASM (wasm-opt -Oz)..."
-    wasm-opt -Oz --strip-debug -o "$root\web\pkg\burmalda57_bg.wasm" "$root\web\pkg\burmalda57_bg.wasm"
+    wasm-opt --all-features -Oz --strip-debug -o "$root\web\pkg\burmalda57_bg.wasm" "$root\web\pkg\burmalda57_bg.wasm"
 } else {
-    Write-Host "==> Подсказка: установите wasm-opt (binaryen) для дополнительного сжатия .wasm на 15-30%"
+    Write-Host "==> Подсказка: wasm-opt не найден, пропускаем post-оптимизацию"
 }
 
 Write-Host ""

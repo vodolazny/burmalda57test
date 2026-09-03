@@ -14,3 +14,4 @@ slint_macros.log
 *~
 .DS_Store
 Thumbs.db
+wasm-opt
