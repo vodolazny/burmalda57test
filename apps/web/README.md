@@ -87,10 +87,14 @@
 
 **Linux / macOS:**
 ```bash
-cd rust
+./build_web.sh
+```
+
+Или вручную:
+```bash
 cargo build --release --target wasm32-unknown-unknown
 wasm-bindgen target/wasm32-unknown-unknown/release/burmalda57.wasm \
-    --out-dir ../web/pkg --target web
+    --out-dir web/pkg --target web
 ```
 
 ### Запуск
@@ -114,14 +118,15 @@ python -m http.server 8080
 
 ```
 .
+├── Cargo.toml                # зависимости Rust и профили оптимизации
+├── build.rs                  # компиляция ui/app.slint
+├── src/                      # логика: login, marks, diary, crypto, net, ...
+├── ui/app.slint              # веб-интерфейс на Slint (M3 Navigation Rail)
 ├── web/
-│   └── index.html            # страница приложения (подключает web/pkg)
-├── rust/                     # ядро на Rust
-│   ├── Cargo.toml
-│   ├── build.rs              # компиляция ui/app.slint
-│   ├── src/                  # логика: login, marks, diary, crypto, net, ...
-│   └── ui/app.slint          # интерфейс на Slint
-├── build_web.ps1             # сборка + wasm-bindgen
+│   ├── index.html            # страница приложения
+│   └── pkg/                  # сгенерированные wasm-bindgen файлы (.wasm, .js)
+├── build_web.sh              # скрипт сборки под Linux/macOS
+├── build_web.ps1             # скрипт сборки под Windows PowerShell
 └── README.md
 ```
 

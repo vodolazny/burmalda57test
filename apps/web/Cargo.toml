@@ -21,11 +21,16 @@ opt-level = 3
 [profile.release.package.aes]
 opt-level = 3
 
+[profile.release.package.sha2]
+opt-level = 3
+
+[profile.release.package.hkdf]
+opt-level = 3
+
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
-semver = "1"
 log = "0.4"
 
 # Криптография (сессия и кеши). На wasm ключ DEK хранится отдельно

@@ -4,16 +4,24 @@ $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 
 # 1. Сборка wasm-библиотеки
-Push-Location "$root\rust"
+Push-Location "$root"
 cargo build --release --target wasm32-unknown-unknown
 Pop-Location
 
 # 2. Генерация JS-обвязки (wasm-bindgen CLI)
 #    Ставится один раз: cargo install wasm-bindgen-cli
 wasm-bindgen `
-    "$root\rust\target\wasm32-unknown-unknown\release\burmalda57.wasm" `
+    "$root\target\wasm32-unknown-unknown\release\burmalda57.wasm" `
     --out-dir "$root\web\pkg" `
     --target web
+
+# 3. Дополнительная оптимизация размера (wasm-opt из Binaryen), если установлена
+if (Get-Command wasm-opt -ErrorAction SilentlyContinue) {
+    Write-Host "==> Оптимизация размера WASM (wasm-opt -Oz)..."
+    wasm-opt -Oz --strip-debug -o "$root\web\pkg\burmalda57_bg.wasm" "$root\web\pkg\burmalda57_bg.wasm"
+} else {
+    Write-Host "==> Подсказка: установите wasm-opt (binaryen) для дополнительного сжатия .wasm на 15-30%"
+}
 
 Write-Host ""
 Write-Host "Готово. Для локального запуска (нужен http-сервер, file:// не работает):"
