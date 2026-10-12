@@ -181,11 +181,6 @@ ls -lh build/*.ipa
     │   └── icons/              # иконки приложения
     └── vendor/                 # вендоренный бэкенд Slint (нужен из-за [patch.crates-io])
 ```
-
-> 📝 Файл `src/android.rs` и `vendor/i-slint-backend-android-activity/` остаются в проекте намеренно:
-> `android.rs` исключается из iOS-сборки через `#[cfg(target_os = "android")]`, а `vendor/` указан в секции
-> `[patch.crates-io]` в `Cargo.toml`, и cargo требует, чтобы этот путь существовал.
-
 ---
 
 ## ❓ Частые проблемы
