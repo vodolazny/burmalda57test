@@ -205,9 +205,9 @@ jobs:
   # ───────────────────────── Публикация в Releases ─────────────────────────
   release:
     name: GitHub Release
-    # по тегу v* — обычный релиз, по пушу в main — плавающий prerelease "nightly";
-    # в обоих случаях только если smoke-тест и сборка прошли
-    if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
+    # публикуем при любом запуске, кроме PR, но только если smoke-тест и сборка прошли
+    # (needs без доп. условий = оба job'а должны завершиться успешно)
+    if: github.event_name != 'pull_request'
     needs: [smoke, ipa]
     runs-on: ubuntu-latest
     permissions:
@@ -228,21 +228,24 @@ jobs:
         id: rel
         run: |
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            # пуш тега v*: релиз с этим тегом
             echo "tag=$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
-            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+            echo "notes=true" >> "$GITHUB_OUTPUT"
           else
-            # плавающий тег: переносим nightly на текущий коммит
-            git tag -f nightly "$GITHUB_SHA"
-            git push -f origin nightly
-            echo "tag=nightly" >> "$GITHUB_OUTPUT"
-            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+            # пуш в main / ручной запуск: плавающий тег latest, переносим на текущий коммит
+            git tag -f latest "$GITHUB_SHA"
+            git push -f origin latest
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+            echo "notes=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.rel.outputs.tag }}
-          prerelease: ${{ steps.rel.outputs.prerelease == 'true' }}
+          name: ${{ steps.rel.outputs.tag == 'latest' && 'Latest build' || steps.rel.outputs.tag }}
+          prerelease: false
+          make_latest: true
           files: dist/build/*.ipa
           fail_on_unmatched_files: true
-          generate_release_notes: ${{ steps.rel.outputs.prerelease == 'false' }}
+          generate_release_notes: ${{ steps.rel.outputs.notes == 'true' }}
