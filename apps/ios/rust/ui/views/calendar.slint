@@ -81,6 +81,7 @@ export component RuCalendar inherits Rectangle {
                 }
 
                 Text {
+                    letter-spacing: Theme.tracking;
                     horizontal-stretch: 1;
                     text: "\{CalMath.months[root.view-month - 1]} \{root.view-year}";
                     font-size: 18px; font-weight: 700; color: Theme.on-surface;
@@ -115,6 +116,7 @@ export component RuCalendar inherits Rectangle {
                 for wd[idx] in CalMath.weekdays : Rectangle {
                     horizontal-stretch: 1;
                     Text {
+                        letter-spacing: Theme.tracking;
                         text: wd;
                         font-size: 12px; font-weight: 600;
                         horizontal-alignment: center; vertical-alignment: center;
@@ -145,6 +147,7 @@ export component RuCalendar inherits Rectangle {
                                   : (ta.pressed && cell.valid) ? Theme.secondary-container
                                   : transparent;
                         Text {
+                            letter-spacing: Theme.tracking;
                             width: 100%; height: 100%;
                             text: cell.valid ? "\{cell.daynum}" : "";
                             font-size: 15px;
@@ -170,7 +173,7 @@ export component RuCalendar inherits Rectangle {
                 Rectangle {
                     width: 108px; height: 40px; border-radius: 20px;
                     background: ca.pressed ? Theme.primary.transparentize(0.88) : transparent;
-                    Text { text: "Отмена"; font-size: 15px; font-weight: 600; color: Theme.primary; horizontal-alignment: center; vertical-alignment: center; }
+                    Text { letter-spacing: Theme.tracking; text: "Отмена"; font-size: 15px; font-weight: 600; color: Theme.primary; horizontal-alignment: center; vertical-alignment: center; }
                     ca := TouchArea { clicked => { root.canceled(); } }
                 }
             }

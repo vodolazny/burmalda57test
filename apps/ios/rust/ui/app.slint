@@ -149,6 +149,7 @@ export component AppWindow inherits Window {
                     }
                 }
                 Text {
+                    letter-spacing: Theme.tracking;
                     horizontal-stretch: 1;
                     text: "Доступна версия " + root.update-version;
                     font-size: 13px;
@@ -167,6 +168,7 @@ export component AppWindow inherits Window {
                         border-radius: 18px;
                         background: dl-ta.pressed ? Theme.primary.darker(0.12) : Theme.primary;
                         dl := Text {
+                            letter-spacing: Theme.tracking;
                             text: "Скачать";
                             color: Theme.on-primary;
                             font-size: 13px;
@@ -272,7 +274,9 @@ export component AppWindow inherits Window {
 
         // Нижняя навигация (M3 navigation bar) — жёсткие трети
         Rectangle {
-            height: 72px + root.bottom-inset;
+            // Контент навбара 64px + только «хвост» safe-area: индикатор «домой» тонкий
+            // и прижат к краю, полный bottom-inset (34px) давал огромную пустую зону.
+            height: 64px + max(root.bottom-inset - 20px, 0px);
             background: Theme.nav-bg;
             drop-shadow-blur: 16px;
             drop-shadow-color: Theme.shadow;
@@ -280,7 +284,7 @@ export component AppWindow inherits Window {
 
             Rectangle {
                 width: 100%;
-                height: 72px;
+                height: 64px;
                 y: 0;
                 NavItem {
                     x: 0; width: parent.width / 3; height: parent.height;

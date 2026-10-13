@@ -18,6 +18,7 @@ export component MaterialButton inherits Rectangle {
         padding-left: 24px;
         padding-right: 24px;
         Text {
+            letter-spacing: Theme.tracking;
             text: root.text;
             color: root.filled ? Theme.on-primary : Theme.primary;
             font-size: 15px;
@@ -55,6 +56,7 @@ export component SegmentedButtons inherits Rectangle {
             }
 
             Text {
+                letter-spacing: Theme.tracking;
                 text: opt;
                 font-size: 13px;
                 font-weight: i == root.selected ? 700 : 500;
@@ -87,6 +89,7 @@ export component FilterChip inherits Rectangle {
         padding-left: 14px;
         padding-right: 14px;
         Text {
+            letter-spacing: Theme.tracking;
             text: root.text;
             font-size: 13px;
             font-weight: 600;
@@ -149,6 +152,7 @@ export component SimStepper inherits Rectangle {
         spacing: 4px;
         alignment: center;
         Text {
+            letter-spacing: Theme.tracking;
             text: "\{root.value}";
             font-size: 22px;
             font-weight: 800;
@@ -156,6 +160,7 @@ export component SimStepper inherits Rectangle {
             horizontal-alignment: center;
         }
         Text {
+            letter-spacing: Theme.tracking;
             text: root.net == 0 ? "—" : (root.net > 0 ? "+\{root.net}" : "\{root.net}");
             font-size: 12px;
             font-weight: 700;
@@ -171,6 +176,7 @@ export component SimStepper inherits Rectangle {
                 opacity: root.can-remove ? 1.0 : 0.4;
                 background: Theme.surface-container-highest;
                 Text {
+                    letter-spacing: Theme.tracking;
                     text: "−";
                     font-size: 18px;
                     font-weight: 800;
@@ -188,6 +194,7 @@ export component SimStepper inherits Rectangle {
                 border-radius: 8px;
                 background: root.fg.transparentize(0.8);
                 Text {
+                    letter-spacing: Theme.tracking;
                     text: "+";
                     font-size: 18px;
                     font-weight: 800;

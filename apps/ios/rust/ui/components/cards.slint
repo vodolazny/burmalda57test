@@ -27,12 +27,14 @@ export component DetailRow inherits HorizontalLayout {
         horizontal-stretch: 1;
         spacing: 1px;
         Text {
+            letter-spacing: Theme.tracking;
             text: root.label;
             font-size: 10px;
             font-weight: 600;
             color: Theme.on-surface-variant.transparentize(0.3);
         }
         Text {
+            letter-spacing: Theme.tracking;
             text: root.value;
             font-size: 13px;
             color: Theme.on-surface;
@@ -50,12 +52,14 @@ export component InfoRow inherits HorizontalLayout {
     in property <string> value;
     spacing: 8px;
     Text {
+        letter-spacing: Theme.tracking;
         text: root.label;
         font-size: 14px;
         color: Theme.on-surface-variant;
         width: 92px;
     }
     Text {
+        letter-spacing: Theme.tracking;
         text: root.value;
         font-size: 14px;
         font-weight: 600;
@@ -82,6 +86,7 @@ export component RecentGradeCard inherits Rectangle {
 
         // Дата выставления оценки
         Text {
+            letter-spacing: Theme.tracking;
             text: root.date;
             font-size: 11px;
             font-weight: 600;
@@ -105,6 +110,7 @@ export component RecentGradeCard inherits Rectangle {
         Rectangle { vertical-stretch: 1; }
 
         Text {
+            letter-spacing: Theme.tracking;
             text: root.subject;
             font-size: 12px;
             font-weight: 500;
@@ -214,6 +220,7 @@ export component LessonCard inherits Rectangle {
                         border-radius: 20px;
                         background: root.is-event ? Theme.primary-container : Theme.secondary-container;
                         if !root.is-event : Text {
+                            letter-spacing: Theme.tracking;
                             text: "\{root.number}";
                             font-size: 17px;
                             font-weight: 700;
@@ -241,6 +248,7 @@ export component LessonCard inherits Rectangle {
                     spacing: 2px;
                     horizontal-stretch: 1;
                     Text {
+                        letter-spacing: Theme.tracking;
                         text: root.subject;
                         font-size: 15px;
                         font-weight: 600;
@@ -249,6 +257,7 @@ export component LessonCard inherits Rectangle {
                         wrap: no-wrap;
                     }
                     Text {
+                        letter-spacing: Theme.tracking;
                         text: root.teacher + (root.room != "" ? "  ·  " + root.room : "");
                         font-size: 12px;
                         color: Theme.on-surface-variant;
@@ -256,6 +265,7 @@ export component LessonCard inherits Rectangle {
                         wrap: no-wrap;
                     }
                     Text {
+                        letter-spacing: Theme.tracking;
                         text: root.time;
                         font-size: 11px;
                         color: Theme.on-surface-variant.transparentize(0.4);
@@ -277,6 +287,7 @@ export component LessonCard inherits Rectangle {
                                 padding-top: 2px;
                                 padding-bottom: 2px;
                                 Text {
+                                    letter-spacing: Theme.tracking;
                                     text: root.grade-type;
                                     font-size: 11px;
                                     font-weight: 600;
@@ -397,6 +408,7 @@ export component LessonCard inherits Rectangle {
                     // Нет темы — говорим только про тему. Раньше один общий
                     // текст на два поля читался как «ДЗ нет», даже когда ДЗ было.
                     if !root.has-topic : Text {
+                        letter-spacing: Theme.tracking;
                         text: "Тема урока не указана";
                         font-size: 13px;
                         color: Theme.on-surface-variant.transparentize(0.25);
@@ -444,6 +456,7 @@ export component LessonCard inherits Rectangle {
                     }
                     // ДЗ нет — отдельная строка ровно про ДЗ, независимо от темы
                     if !root.has-hw : Text {
+                        letter-spacing: Theme.tracking;
                         text: "Домашнее задание не указано";
                         font-size: 13px;
                         color: Theme.on-surface-variant.transparentize(0.25);
@@ -469,6 +482,7 @@ export component LessonCard inherits Rectangle {
                                 }
                             }
                             Text {
+                                letter-spacing: Theme.tracking;
                                 horizontal-stretch: 1;
                                 text: "Заметка";
                                 font-size: 10px;
@@ -478,6 +492,7 @@ export component LessonCard inherits Rectangle {
                             }
                             // Подтверждение autosave
                             if root.note-saved : Text {
+                                letter-spacing: Theme.tracking;
                                 text: "Сохранено";
                                 font-size: 10px;
                                 color: Theme.primary;
@@ -547,6 +562,7 @@ export component LessonCard inherits Rectangle {
                                     }
                                 }
                                 Text {
+                                    letter-spacing: Theme.tracking;
                                     text: "Добавить заметку";
                                     font-size: 13px;
                                     vertical-alignment: center;
@@ -652,6 +668,7 @@ export component SubjectCard inherits Rectangle {
                 }
             }
             Text {
+                letter-spacing: Theme.tracking;
                 horizontal-stretch: 1;
                 text: root.subject;
                 font-size: 16px;
@@ -672,6 +689,7 @@ export component SubjectCard inherits Rectangle {
                 border-color: am.fg.transparentize(0.7);
                 badge := HorizontalLayout {
                     Text {
+                        letter-spacing: Theme.tracking;
                         text: root.average;
                         font-size: 15px;
                         font-weight: 800;
@@ -723,6 +741,7 @@ export component SubjectFinalsCard inherits Rectangle {
         spacing: 12px;
 
         Text {
+            letter-spacing: Theme.tracking;
             text: root.subject;
             font-size: 15px;
             font-weight: 700;
@@ -791,6 +810,7 @@ export component ChildItemCard inherits Rectangle {
             horizontal-stretch: 1;
 
             Text {
+                letter-spacing: Theme.tracking;
                 text: root.name;
                 font-size: 15px;
                 font-weight: 700;
@@ -799,6 +819,7 @@ export component ChildItemCard inherits Rectangle {
                 wrap: no-wrap;
             }
             if root.school-class != "" : Text {
+                letter-spacing: Theme.tracking;
                 text: root.school-class + " класс";
                 font-size: 12px;
                 font-weight: 600;
@@ -807,6 +828,7 @@ export component ChildItemCard inherits Rectangle {
                 wrap: no-wrap;
             }
             if root.school-name != "" : Text {
+                letter-spacing: Theme.tracking;
                 text: root.school-name;
                 font-size: 11px;
                 color: Theme.on-surface-variant;

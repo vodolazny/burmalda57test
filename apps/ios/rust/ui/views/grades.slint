@@ -144,6 +144,7 @@ export component GradesView inherits Rectangle {
                         }
                     }
                     Text {
+                        letter-spacing: Theme.tracking;
                         text: root.error != "" ? root.error : "За эту четверть оценок нет";
                         font-size: 14px; font-weight: 500;
                         color: Theme.on-surface-variant;
@@ -192,6 +193,7 @@ export component GradesView inherits Rectangle {
                     }
                 }
                 Text {
+                    letter-spacing: Theme.tracking;
                     text: root.error != "" ? root.error : "Итоговых оценок пока нет";
                     font-size: 14px; font-weight: 500;
                     color: Theme.on-surface-variant;

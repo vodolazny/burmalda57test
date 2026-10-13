@@ -37,6 +37,7 @@ export component ChartSheet inherits Rectangle {
             HorizontalLayout {
                 spacing: 10px;
                 Text {
+                    letter-spacing: Theme.tracking;
                     horizontal-stretch: 1;
                     text: root.subject;
                     font-size: 18px;
@@ -47,6 +48,7 @@ export component ChartSheet inherits Rectangle {
                     vertical-alignment: center;
                 }
                 Text {
+                    letter-spacing: Theme.tracking;
                     text: "График за год";
                     font-size: 12px;
                     color: Theme.on-surface-variant;
@@ -82,6 +84,7 @@ export component ChartSheet inherits Rectangle {
                     height: 1px;
                     background: Theme.on-surface-variant.transparentize(0.9);
                     Text {
+                        letter-spacing: Theme.tracking;
                         x: -22px;
                         y: -8px;
                         text: "\{lvl}";
@@ -106,6 +109,7 @@ export component ChartSheet inherits Rectangle {
                         background: Theme.outline;
                     }
                     Text {
+                        letter-spacing: Theme.tracking;
                         x: 3px;
                         y: parent.height - self.height - 2px;
                         text: d.label;
@@ -157,6 +161,7 @@ export component ChartSheet inherits Rectangle {
                     y: (parent.height - self.height) / 2;
                 }
                 if !root.loading && !root.has-data : Text {
+                    letter-spacing: Theme.tracking;
                     x: (parent.width - self.width) / 2;
                     y: (parent.height - self.height) / 2;
                     text: "Нет оценок для графика";

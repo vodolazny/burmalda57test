@@ -91,7 +91,7 @@ export component DiaryView inherits Rectangle {
                     Rectangle {
                         width: 46px; height: 46px; border-radius: 23px;
                         background: pa.pressed ? Theme.secondary-container.darker(0.08) : Theme.secondary-container;
-                        Text { text: "‹"; font-size: 24px; color: Theme.on-secondary-container; horizontal-alignment: center; vertical-alignment: center; }
+                        Text { letter-spacing: Theme.tracking; text: "‹"; font-size: 24px; color: Theme.on-secondary-container; horizontal-alignment: center; vertical-alignment: center; }
                     }
                     pa := TouchArea { clicked => { root.prev-day(); } }
                 }
@@ -105,6 +105,7 @@ export component DiaryView inherits Rectangle {
                         alignment: center;
                         spacing: 6px;
                         Text {
+                            letter-spacing: Theme.tracking;
                             text: root.date-short;
                             font-size: 22px; font-weight: 700;
                             color: Theme.on-surface;
@@ -120,7 +121,7 @@ export component DiaryView inherits Rectangle {
                     Rectangle {
                         width: 46px; height: 46px; border-radius: 23px;
                         background: na.pressed ? Theme.secondary-container.darker(0.08) : Theme.secondary-container;
-                        Text { text: "›"; font-size: 24px; color: Theme.on-secondary-container; horizontal-alignment: center; vertical-alignment: center; }
+                        Text { letter-spacing: Theme.tracking; text: "›"; font-size: 24px; color: Theme.on-secondary-container; horizontal-alignment: center; vertical-alignment: center; }
                     }
                     na := TouchArea { clicked => { root.next-day(); } }
                 }
@@ -177,6 +178,7 @@ export component DiaryView inherits Rectangle {
                     spacing: 2px;
                     horizontal-stretch: 1;
                     Text {
+                        letter-spacing: Theme.tracking;
                         text: root.net-error;
                         font-size: 12px;
                         font-weight: 600;
@@ -185,6 +187,7 @@ export component DiaryView inherits Rectangle {
                     }
                     // Показываем, насколько устарели данные на экране
                     if root.net-stale != "" : Text {
+                        letter-spacing: Theme.tracking;
                         text: root.net-stale;
                         font-size: 11px;
                         color: Theme.on-error-container.transparentize(0.25);
@@ -205,6 +208,7 @@ export component DiaryView inherits Rectangle {
                             ? Theme.on-error-container.transparentize(0.82)
                             : transparent;
                         rf := Text {
+                            letter-spacing: Theme.tracking;
                             text: "Обновить";
                             font-size: 12px;
                             font-weight: 600;
@@ -361,6 +365,7 @@ export component DiaryView inherits Rectangle {
                 opacity: min(flick.viewport-y / root.pull-trigger, 1.0);
                 
                 Text {
+                    letter-spacing: Theme.tracking;
                     width: 100%;
                     height: 100%;
                     text: flick.viewport-y >= root.pull-trigger ? "↑" : "��";
@@ -403,6 +408,7 @@ export component DiaryView inherits Rectangle {
                     }
                 }
                 Text {
+                    letter-spacing: Theme.tracking;
                     text: "В этот день уроков нет";
                     font-size: 15px;
                     font-weight: 600;

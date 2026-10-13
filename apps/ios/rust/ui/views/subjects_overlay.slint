@@ -34,12 +34,14 @@ export component SubjectsOverlay inherits Rectangle {
                     horizontal-stretch: 1;
                     spacing: 2px;
                     Text {
+                        letter-spacing: Theme.tracking;
                         text: "Предметы в дневнике";
                         font-size: 20px;
                         font-weight: 700;
                         color: Theme.on-surface;
                     }
                     Text {
+                        letter-spacing: Theme.tracking;
                         text: "Выключенные не показываются в дне";
                         font-size: 12px;
                         color: Theme.on-surface-variant;
@@ -76,6 +78,7 @@ export component SubjectsOverlay inherits Rectangle {
             Rectangle { height: 1px; background: Theme.outline-variant; }
 
             if root.items.length == 0 : Text {
+                letter-spacing: Theme.tracking;
                 text: "Предметы появятся после загрузки дневника";
                 font-size: 13px;
                 color: Theme.on-surface-variant;
@@ -103,6 +106,7 @@ export component SubjectsOverlay inherits Rectangle {
                             spacing: 10px;
 
                             Text {
+                                letter-spacing: Theme.tracking;
                                 horizontal-stretch: 1;
                                 text: item.subject;
                                 font-size: 14px;

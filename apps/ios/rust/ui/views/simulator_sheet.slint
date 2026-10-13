@@ -67,6 +67,7 @@ export component SimulatorSheet inherits Rectangle {
             HorizontalLayout {
                 spacing: 10px;
                 Text {
+                    letter-spacing: Theme.tracking;
                     horizontal-stretch: 1;
                     text: root.subject;
                     font-size: 18px;
@@ -102,15 +103,16 @@ export component SimulatorSheet inherits Rectangle {
                 VerticalLayout {
                     horizontal-stretch: 1;
                     spacing: 4px;
-                    Text { text: "Сейчас"; font-size: 12px; font-weight: 600; color: Theme.on-surface-variant; horizontal-alignment: center; }
+                    Text { letter-spacing: Theme.tracking; text: "Сейчас"; font-size: 12px; font-weight: 600; color: Theme.on-surface-variant; horizontal-alignment: center; }
                     Text {
+                        letter-spacing: Theme.tracking;
                         text: root.real-count == 0 ? "—" : root.real-avg-str;
                         font-size: 26px;
                         font-weight: 800;
                         color: Theme.on-surface;
                         horizontal-alignment: center;
                     }
-                    Text { text: "\{root.real-count} оц."; font-size: 11px; color: Theme.on-surface-variant; horizontal-alignment: center; }
+                    Text { letter-spacing: Theme.tracking; text: "\{root.real-count} оц."; font-size: 11px; color: Theme.on-surface-variant; horizontal-alignment: center; }
                 }
                 VerticalLayout {
                     alignment: center;
@@ -124,11 +126,12 @@ export component SimulatorSheet inherits Rectangle {
                 VerticalLayout {
                     horizontal-stretch: 1;
                     spacing: 4px;
-                    Text { text: "Прогноз"; font-size: 12px; font-weight: 600; color: Theme.on-surface-variant; horizontal-alignment: center; }
+                    Text { letter-spacing: Theme.tracking; text: "Прогноз"; font-size: 12px; font-weight: 600; color: Theme.on-surface-variant; horizontal-alignment: center; }
                     HorizontalLayout {
                         alignment: center;
                         spacing: 8px;
                         Text {
+                            letter-spacing: Theme.tracking;
                             text: root.proj-avg-str;
                             font-size: 26px;
                             font-weight: 800;
@@ -142,12 +145,12 @@ export component SimulatorSheet inherits Rectangle {
                             font: 19px;
                         }
                     }
-                    Text { text: root.change-count == 0 ? "\{root.total-count} оц." : (root.change-count > 0 ? "\{root.total-count} оц. (+\{root.change-count})" : "\{root.total-count} оц. (\{root.change-count})"); font-size: 11px; color: Theme.on-surface-variant; horizontal-alignment: center; }
+                    Text { letter-spacing: Theme.tracking; text: root.change-count == 0 ? "\{root.total-count} оц." : (root.change-count > 0 ? "\{root.total-count} оц. (+\{root.change-count})" : "\{root.total-count} оц. (\{root.change-count})"); font-size: 11px; color: Theme.on-surface-variant; horizontal-alignment: center; }
                 }
             }
 
             // Уже стоящие оценки (для наглядности)
-            if root.source-marks.length > 0 : Text { text: "Уже стоящие оценки"; font-size: 13px; font-weight: 600; color: Theme.on-surface-variant; }
+            if root.source-marks.length > 0 : Text { letter-spacing: Theme.tracking; text: "Уже стоящие оценки"; font-size: 13px; font-weight: 600; color: Theme.on-surface-variant; }
             if root.source-marks.length > 0 : Rectangle {
                 clip: true;
                 height: exist-grid.min-height > 156px ? 156px : exist-grid.min-height;
@@ -183,7 +186,7 @@ export component SimulatorSheet inherits Rectangle {
             }
 
             // Смоделировать: + добавить оценку, − убрать оценку
-            Text { text: "Смоделировать (+ добавить / − убрать)"; font-size: 13px; font-weight: 600; color: Theme.on-surface-variant; }
+            Text { letter-spacing: Theme.tracking; text: "Смоделировать (+ добавить / − убрать)"; font-size: 13px; font-weight: 600; color: Theme.on-surface-variant; }
             HorizontalLayout {
                 spacing: 8px;
                 SimStepper { horizontal-stretch: 1; value: 5; net: root.net5; can-remove: root.net5 > -root.exist5; add => { root.net5 += 1; } remove => { root.net5 -= root.net5 > -root.exist5 ? 1 : 0; } }
@@ -197,6 +200,7 @@ export component SimulatorSheet inherits Rectangle {
                 border-radius: 22px;
                 background: reset-ta.pressed ? Theme.surface-container-highest : Theme.surface-container-high;
                 Text {
+                    letter-spacing: Theme.tracking;
                     text: "Сбросить";
                     font-size: 14px;
                     font-weight: 700;
@@ -210,6 +214,7 @@ export component SimulatorSheet inherits Rectangle {
             }
 
             Text {
+                letter-spacing: Theme.tracking;
                 text: "Это прикидка: как изменится средний балл, если добавить или убрать оценки. Реальные оценки не меняются.";
                 font-size: 11px;
                 color: Theme.on-surface-variant;
@@ -259,6 +264,7 @@ export component SimulatorSheet inherits Rectangle {
                         border-radius: 22px;
                         background: Theme.primary;
                         Text {
+                            letter-spacing: Theme.tracking;
                             text: "Че?!?!";
                             font-size: 15px;
                             font-weight: 700;

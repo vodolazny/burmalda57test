@@ -12,6 +12,10 @@ export global Theme {
     // ================================================================
     in-out property <bool> dark: false;
 
+    // Межбуквенный интервал: Skia на iOS рисует системный шрифт без трекинга,
+    // из-за чего кириллица выглядит слишком плотной.
+    out property <length> tracking: 0.3px;
+
     // Accent 1 (primary)
     in-out property <color> primary:              dark ? #D0BCFF : #6750A4;
     in-out property <color> on-primary:           dark ? #381E72 : #FFFFFF;

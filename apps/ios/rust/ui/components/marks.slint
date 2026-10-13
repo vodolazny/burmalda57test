@@ -28,6 +28,7 @@ export component MarkToken inherits Rectangle {
     border-color: root.fg.transparentize(0.7);
 
     Text {
+        letter-spacing: Theme.tracking;
         width: 100%; height: 100%;
         text: root.text;
         font-size: root.font;
@@ -56,6 +57,7 @@ export component MarkMicroCard inherits Rectangle {
         spacing: 2px;
         alignment: center;
         Text {
+            letter-spacing: Theme.tracking;
             text: root.date;
             font-size: 10px;
             color: Theme.on-surface-variant;
@@ -64,6 +66,7 @@ export component MarkMicroCard inherits Rectangle {
             wrap: no-wrap;
         }
         Text {
+            letter-spacing: Theme.tracking;
             text: "\{root.value}";
             font-size: 21px;
             font-weight: 800;
@@ -88,6 +91,7 @@ export component FinalCell inherits VerticalLayout {
     spacing: 3px;
 
     Text {
+        letter-spacing: Theme.tracking;
         text: root.label;
         font-size: 10px;
         font-weight: 600;
@@ -102,6 +106,7 @@ export component FinalCell inherits VerticalLayout {
         border-width: 1px;
         border-color: mc.fg.transparentize(0.7);
         Text {
+            letter-spacing: Theme.tracking;
             width: 100%; height: 100%;
             text: root.average;
             font-size: 14px;

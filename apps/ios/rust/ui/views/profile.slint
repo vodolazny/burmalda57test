@@ -85,8 +85,8 @@ export component ProfileView inherits Rectangle {
                     VerticalLayout {
                         alignment: center;
                         spacing: 2px;
-                        Text { text: root.full-name; font-size: 16px; font-weight: 700; color: Theme.on-surface; wrap: word-wrap; }
-                        Text { text: root.school-class + " класс"; font-size: 13px; color: Theme.on-surface-variant; }
+                        Text { letter-spacing: Theme.tracking; text: root.full-name; font-size: 16px; font-weight: 700; color: Theme.on-surface; wrap: word-wrap; }
+                        Text { letter-spacing: Theme.tracking; text: root.school-class + " класс"; font-size: 13px; color: Theme.on-surface-variant; }
                     }
                 }
                 Rectangle { height: 1px; background: Theme.outline-variant; }
@@ -132,12 +132,14 @@ export component ProfileView inherits Rectangle {
                         spacing: 2px;
                         horizontal-stretch: 1;
                         Text {
+                            letter-spacing: Theme.tracking;
                             text: "Выбрать ребёнка";
                             font-size: 15px;
                             font-weight: 600;
                             color: Theme.on-surface;
                         }
                         Text {
+                            letter-spacing: Theme.tracking;
                             text: "Текущий: " + root.full-name;
                             font-size: 12px;
                             color: Theme.on-surface-variant;
@@ -204,12 +206,14 @@ export component ProfileView inherits Rectangle {
                         spacing: 2px;
                         horizontal-stretch: 1;
                         Text {
+                            letter-spacing: Theme.tracking;
                             text: "Предметы в дневнике";
                             font-size: 15px;
                             font-weight: 600;
                             color: Theme.on-surface;
                         }
                         Text {
+                            letter-spacing: Theme.tracking;
                             text: "Скрыть ненужные предметы из расписания";
                             font-size: 12px;
                             color: Theme.on-surface-variant;
@@ -250,11 +254,13 @@ export component ProfileView inherits Rectangle {
         VerticalLayout {
             spacing: 3px;
             Text {
+                letter-spacing: Theme.tracking;
                 text: "Неофициальный клиент Образования 57";
                 font-size: 11px; color: Theme.on-surface-variant;
                 horizontal-alignment: center;
             }
             Text {
+                letter-spacing: Theme.tracking;
                 text: "made in rust + slint";
                 font-size: 11px; color: Theme.on-surface-variant;
                 horizontal-alignment: center;
@@ -262,6 +268,7 @@ export component ProfileView inherits Rectangle {
             TouchArea {
                 height: linkText.preferred-height;
                 linkText := Text {
+                    letter-spacing: Theme.tracking;
                     text: "github.com/vodolazny/burmalda57";
                     font-size: 11px; color: Theme.primary;
                     width: 100%;
