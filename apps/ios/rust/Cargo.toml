@@ -80,3 +80,6 @@ slint = { version = "1.16", default-features = false, features = [
 slint-build = "1.16"
 # компилирует ios/glue.m (Objective-C) при сборке под iOS
 cc = "1"
+
+[patch.crates-io]
+i-slint-backend-android-activity = { path = "vendor/i-slint-backend-android-activity" }
