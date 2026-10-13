@@ -205,13 +205,16 @@ jobs:
   # ───────────────────────── Публикация в Releases ─────────────────────────
   release:
     name: GitHub Release
-    # только по тегу v* и только если smoke-тест и сборка прошли
-    if: startsWith(github.ref, 'refs/tags/v')
+    # по тегу v* — обычный релиз, по пушу в main — плавающий prerelease "nightly";
+    # в обоих случаях только если smoke-тест и сборка прошли
+    if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
     needs: [smoke, ipa]
     runs-on: ubuntu-latest
     permissions:
-      contents: write # создание релиза и загрузка .ipa
+      contents: write # создание релиза, тега и загрузка .ipa
     steps:
+      - uses: actions/checkout@v5
+
       - name: Скачать .ipa
         uses: actions/download-artifact@v4
         with:
@@ -221,9 +224,25 @@ jobs:
       - name: Что скачалось
         run: find dist -type f -exec ls -lh {} +
 
+      - name: Определить тег релиза
+        id: rel
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            echo "tag=$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          else
+            # плавающий тег: переносим nightly на текущий коммит
+            git tag -f nightly "$GITHUB_SHA"
+            git push -f origin nightly
+            echo "tag=nightly" >> "$GITHUB_OUTPUT"
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.rel.outputs.tag }}
+          prerelease: ${{ steps.rel.outputs.prerelease == 'true' }}
           files: dist/build/*.ipa
           fail_on_unmatched_files: true
-          generate_release_notes: true
+          generate_release_notes: ${{ steps.rel.outputs.prerelease == 'false' }}
