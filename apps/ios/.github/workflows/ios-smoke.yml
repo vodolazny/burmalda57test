@@ -87,7 +87,14 @@ jobs:
           cp ~/Library/Logs/DiagnosticReports/*burmalda* artifacts/ 2>/dev/null || true
           xcrun simctl spawn booted log show --last 2m --style compact \
             --predicate 'process == "burmalda57"' > artifacts/app.log 2>&1 || true
-
+            
+      - name: Проверить, что UI реально создался
+        working-directory: rust
+        run: |
+          if grep -q "could not load class" artifacts/app.log; then
+            echo "::error::Не загрузился класс сцены, UI не создан (чёрный экран)"
+            exit 1
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
