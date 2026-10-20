@@ -63,6 +63,9 @@ jobs:
 
       - name: Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # дефолт "tools platform-tools" падает: пакет tools удалён из SDK
+          packages: "platform-tools"
 
       - name: Android platform, build-tools и NDK
         run: |
