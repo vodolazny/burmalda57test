@@ -3,6 +3,11 @@
 Неофициальный Android-клиент электронного дневника Орловской области ([obr57.ru](https://obr57.ru/gis)).
 Написан на **Rust + [Slint](https://slint.dev)** (нативный аппаратный рендер FemtoVG / OpenGL ES через EGL), сборка через Gradle.
 
+Это часть [монорепозитория burmalda57](../../README.md): бизнес-логика — в
+[`crates/core`](../../crates/core), общий мобильный UI — в
+[`crates/ui`](../../crates/ui), состояние и сеть — в
+[`crates/mobile`](../../crates/mobile).
+
 ![platform](https://img.shields.io/badge/platform-Android%208.0%2B-brightgreen)
 ![arch](https://img.shields.io/badge/arch-arm64--v8a-blue)
 ![license](https://img.shields.io/badge/license-Apache--2.0-lightgrey)
@@ -163,18 +168,29 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## 🧯 Отключить Sentry
 
-Если не хочешь, чтобы приложение отправляло отчёты о сбоях:
+Sentry включается только при сборке с переменной окружения `SENTRY_DSN`:
 
-1. В `rust/Cargo.toml` убери зависимость `sentry`.
-2. В `rust/src/lib.rs` удали блок инициализации Sentry (`sentry::init(...)` и связанный `_guard`).
-3. Пересобери — приложение будет работать полностью автономно без телеметрии.
+```bash
+SENTRY_DSN="https://..." ./build.sh --release
+```
+
+Если переменная не задана (по умолчанию), отчёты о сбоях не отправляются.
+В GitHub Actions DSN берётся из repository secret `SENTRY_DSN`; без секрета
+release-сборка также собирается без крашлитики.
 
 ---
 
 ## 🗂️ Структура проекта
 
 ```
-.
+crates/
+├── core/                                # общая бизнес-логика: домен, API, парсеры,
+│                                        # крипта, кэш, локальные хранилища
+├── ui/                                  # общий Slint-UI Android/iOS
+└── mobile/                              # состояние, колбэки, сеть, Platform,
+                                         # адаптеры core → Slint
+
+apps/android/
 ├── app/                                 # Android-часть проекта (Gradle)
 │   ├── build.gradle                     # конфигурация сборки + задача cargoNdkBuild
 │   ├── proguard-rules.pro               # правила ProGuard/R8 для JNI
@@ -188,47 +204,14 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 │       │   ├── Notifier.kt              # генерация системных уведомлений
 │       │   └── AvatarPickerActivity.kt  # выбор и кроп аватара
 │       └── res/                         # иконки и ресурсы
-├── rust/                                # Ядро приложения на Rust
-│   ├── Cargo.toml                       # зависимости и конфигурация профилей сборки
-│   ├── build.rs                         # генерация UI-кода из Slint разметки
-│   ├── vendor/                          # локальные адаптеры бэкендов (FemtoVG EGL)
-│   ├── src/                             # бизнес-логика:
-│   │   ├── lib.rs                       # точка входа (android_main), сессия, события UI
-│   │   ├── login.rs                     # разбор сессии ЕСИА и профилей учащихся
-│   │   ├── marks.rs                     # периоды, оценки, взвешенный балл, графики
-│   │   ├── diary.rs                     # дневник, расписание уроков, лента недавних оценок
-│   │   ├── finals.rs                    # итоговые годовые оценки
-│   │   ├── crypto.rs                    # шифрование локальных данных сессии и кешей
-│   │   ├── cache.rs                     # офлайн-кеш дней и расписания
-│   │   ├── notify.rs                    # трекинг новых оценок и планирование уведомлений
-│   │   ├── notes.rs                     # локальные заметки к урокам
-│   │   ├── subjects.rs                  # скрытие/отображение предметов
-│   │   ├── events.rs                    # личные события в расписании
-│   │   ├── profile.rs                   # управление аватаром и внешними ссылками
-│   │   ├── theme.rs                     # системная светлая/тёмная тема
-│   │   ├── bridge.rs                    # синхронизация моделей данных с Slint
-│   │   └── android.rs                   # JNI-взаимодействие и управление Intent-ами
-│   └── ui/                              # Модульный интерфейс на Slint:
-│       ├── app.slint                    # корневой файл и компонент AppWindow
-│       ├── types.slint                  # структуры данных (Lesson, GradeMark и т.д.)
-│       ├── theme.slint                  # палитра цветов, тема и математические хелперы
-│       ├── components/                  # переиспользуемые UI-компоненты:
-│       │   ├── buttons.slint            # MaterialButton, SegmentedButtons, FilterChip, MSwitch
-│       │   ├── cards.slint              # карточки уроков, предметов, инфо-строки
-│       │   ├── marks.slint              # бейджи оценок, цветовая дифференциация
-│       │   ├── navigation.slint         # навигационная панель и иконки
-│       │   └── loading.slint            # анимированный MD3 индикатор загрузки
-│       └── views/                       # полноэкранные экраны и модальные шторки:
-│           ├── diary.slint              # экран дневника с расписанием
-│           ├── grades.slint             # экран оценок по четвертям
-│           ├── profile.slint            # профиль ученика
-│           ├── login.slint              # экран приветствия и входа
-│           ├── calendar.slint           # интерактивный календарь выбора даты
-│           ├── chart_sheet.slint        # график успеваемости
-│           ├── simulator_sheet.slint    # симулятор/калькулятор среднего балла
-│           ├── event_sheet.slint        # создание и удаление событий
-│           ├── child_select.slint       # выбор ребёнка (режим родителя)
-│           └── subjects_overlay.slint   # управление списком предметов
+├── rust/                                # Тонкая оболочка Android на Rust
+│   ├── Cargo.toml                       # backend femtovg + android-activity
+│   └── src/
+│       ├── lib.rs                       # android_main, Sentry, JNI-экспорты
+│       ├── android.rs                   # JNI-взаимодействие и управление Intent-ами
+│       ├── keystore.rs                  # Android Keystore: обёртка DEK
+│       ├── platform.rs                  # Platform: вход, toast, ссылки, уведомления
+│       └── theme.rs                     # системная тема и Material You
 ├── build.sh                             # автосборка под Linux/macOS
 ├── build.ps1                            # автосборка под Windows PowerShell
 ├── build.gradle
@@ -239,7 +222,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## 📄 Лицензия
 
-[Apache License 2.0](LICENSE).
+[Apache License 2.0](../../LICENSE).
 
 Товарные знаки, названия и данные принадлежат их владельцам. Проект создан в образовательных целях как удобный клиент к уже существующему сервису.
 

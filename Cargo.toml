@@ -1,0 +1,37 @@
+[workspace]
+resolver = "2"
+members = [
+    "apps/android/rust",
+    "apps/ios/rust",
+    "apps/web",
+    "crates/core",
+    "crates/ui",
+    "crates/mobile",
+]
+
+# Патченный Android-backend собран под slint 1.16.1, поэтому версия slint
+# закреплена точно в манифестах приложений.
+[patch.crates-io]
+i-slint-backend-android-activity = { path = "vendor/i-slint-backend-android-activity" }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.release.package.aes]
+opt-level = 3
+
+[profile.release.package.aes-gcm]
+opt-level = 3
+
+[profile.release.package.hkdf]
+opt-level = 3
+
+[profile.release.package.ring]
+opt-level = 3
+
+[profile.release.package.sha2]
+opt-level = 3

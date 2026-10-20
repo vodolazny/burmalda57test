@@ -1,6 +1,4 @@
 fn main() {
-    slint_build::compile("ui/app.slint").unwrap();
-
     // iOS: нативная часть (WKWebView, Keychain, PHPicker, уведомления, BGTask) написана
     // на Objective-C — см. ios/glue.m. Компилируем её и линкуем нужные фреймворки.
     println!("cargo:rerun-if-changed=ios/glue.m");

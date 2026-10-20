@@ -2045,6 +2045,7 @@ component ProfileView inherits Rectangle {
     in property <bool> is-parent: false;
     in property <string> parent-name: "";
     in property <[ChildItem]> children-list;
+    in property <bool> demo-only: false;
     callback logout();
     callback pick-avatar();
     callback open-url(string);
@@ -2071,6 +2072,33 @@ component ProfileView inherits Rectangle {
                 font-weight: 800;
                 color: Theme.on-surface;
                 horizontal-alignment: left;
+            }
+
+            if root.demo-only : Rectangle {
+                border-radius: Theme.radius-m;
+                background: Theme.secondary-container;
+                border-width: 1px;
+                border-color: Theme.outline-variant;
+
+                VerticalLayout {
+                    padding: 14px;
+                    spacing: 4px;
+
+                    Text {
+                        text: "Демо-режим";
+                        font-size: 14px;
+                        font-weight: 700;
+                        color: Theme.on-secondary-container;
+                        horizontal-alignment: left;
+                    }
+                    Text {
+                        text: "Это публичная демонстрация на учебных данных: вход и сеть отключены. Полную версию можно собрать из репозитория.";
+                        font-size: 12px;
+                        color: Theme.on-secondary-container;
+                        horizontal-alignment: left;
+                        wrap: word-wrap;
+                    }
+                }
             }
 
             // ==========================================
@@ -2123,7 +2151,7 @@ component ProfileView inherits Rectangle {
                         }
 
                         // Кнопка «Выйти» (по центру строки по вертикали, не задрана вверх)
-                        VerticalLayout {
+                        if !root.demo-only : VerticalLayout {
                             alignment: center;
                             Rectangle {
                                 height: 36px;
@@ -4101,6 +4129,8 @@ export component AppWindow inherits Window {
 
     in property <[RecentGrade]> recent-grades;
     in property <bool> logged-in: false;
+    // Демо-сборка: вход и выход отключены, профиль показывает пояснение.
+    in property <bool> demo-only: false;
     in property <string> full-name: "—";
     in property <string> school-name: "—";
     in property <string> school-class: "—";
@@ -4527,6 +4557,7 @@ export component AppWindow inherits Window {
                 is-parent: root.is-parent;
                 parent-name: root.parent-name;
                 children-list: root.children-list;
+                demo-only: root.demo-only;
                 logout => { root.logout(); }
                 pick-avatar => { root.pick-avatar(); }
                 open-url(u) => { root.open-url(u); }

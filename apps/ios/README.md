@@ -3,6 +3,11 @@
 Неофициальный клиент электронного дневника Орловской области ([obr57.ru](https://obr57.ru/gis)).
 Написан на **Rust + [Slint](https://slint.dev)** (рендер Skia / Metal на iOS).
 
+Это часть [монорепозитория burmalda57](../../README.md): бизнес-логика — в
+[`crates/core`](../../crates/core), общий мобильный UI — в
+[`crates/ui`](../../crates/ui), состояние и сеть — в
+[`crates/mobile`](../../crates/mobile).
+
 ![platform](https://img.shields.io/badge/platform-iOS%2015%2B-black)
 ![arch](https://img.shields.io/badge/arch-arm64-blue)
 ![license](https://img.shields.io/badge/license-Apache--2.0-lightgrey)
@@ -40,7 +45,8 @@
 - **Данные уходят только на официальные серверы** регионального дневника. Сторонних бэкендов нет.
 - **Офлайн-работа:** расписание и оценки кешируются в зашифрованном виде. При выходе из аккаунта кеш удаляется.
 - **Единственное внешнее исключение — Sentry** (технические отчёты о падениях, без персональных данных).
-  Отключить: уберите зависимость `sentry` из `rust/Cargo.toml` и блок `sentry::init(...)` в `rust/src/lib.rs`.
+  Отчёты включаются только при сборке с переменной `SENTRY_DSN`; без неё крашлитика отключена.
+  В CI DSN передаётся из repository secret `SENTRY_DSN`.
 - Рекламы, трекеров и аналитики поведения нет.
 
 ---
@@ -66,10 +72,11 @@ IPHONEOS_DEPLOYMENT_TARGET=15.0 cargo build --release \
   --features ios-app
 ```
 
-Первая сборка долгая (подтягивается и собирается Skia). Результат —
-`rust/target/aarch64-apple-ios/release/burmalda57-ios`.
+Первая сборка долгая (подтягивается и собирается Skia). В монорепо Cargo
+использует общий `target/` в корне репозитория; относительно `apps/ios/rust`
+результат лежит в `../../../target/aarch64-apple-ios/release/burmalda57-ios`.
 
-> Cargo может обновить `Cargo.lock` под iOS-зависимости — это нормально.
+> `Cargo.lock` общий для всего монорепо и лежит в корне репозитория.
 
 ### 3. Упаковка в `.ipa`
 
@@ -80,7 +87,7 @@ VERSION=$(grep -m1 '^version' Cargo.toml | cut -d'"' -f2)
 APP=build/Payload/burmalda57.app
 
 rm -rf build && mkdir -p "$APP"
-cp target/aarch64-apple-ios/release/burmalda57-ios "$APP/burmalda57"
+cp ../../../target/aarch64-apple-ios/release/burmalda57-ios "$APP/burmalda57"
 chmod +x "$APP/burmalda57"
 sed -e "s/@VERSION@/${VERSION}/" -e "s/@BUILD@/1/" ios/Info.plist > "$APP/Info.plist"
 plutil -lint "$APP/Info.plist"
@@ -149,7 +156,7 @@ ls -lh build/*.ipa
 | Slint + FemtoVG/EGL | Slint + winit + **Skia (Metal)** |
 | `cdylib` `.so` + NativeActivity | обычный бинарник `burmalda57-ios` (`src/main.rs`), упаковывается в `.app` |
 | `EsiaAuthActivity` (WebView) | `WKWebView` с непостоянным хранилищем куков (`ios/glue.m`) |
-| Android Keystore | ключ-обёртка в Keychain, тот же формат файлов (`crypto.rs`) |
+| Android Keystore | ключ-обёртка в Keychain, тот же формат файлов (`crates/core/src/crypto.rs`) |
 | `AvatarPickerActivity` | `PHPickerViewController` |
 | WorkManager, каждые ~30 мин | `BGAppRefreshTask` + локальные уведомления |
 | Toast | плашка поверх окна |
@@ -161,25 +168,25 @@ ls -lh build/*.ipa
 ## 🗂️ Структура проекта
 
 ```
-.
-└── rust/
-    ├── Cargo.toml              # зависимости (цели android/ios разделены через cfg)
-    ├── Cargo.lock
-    ├── build.rs                # компиляция Slint-UI и ios/glue.m, линковка фреймворков
-    ├── assets/                 # ресурсы UI
-    ├── ui/                     # Slint-интерфейс (экраны и компоненты)
-    ├── src/
-    │   ├── main.rs             # точка входа iOS-бинарника
-    │   ├── lib.rs              # общая логика приложения
-    │   ├── ios.rs              # Rust-часть мостов к Objective-C
-    │   ├── platform.rs         # платформенные вызовы из общего кода
-    │   ├── session_flow.rs     # вход и навигация «Назад» (общая для платформ)
-    │   └── ...                 # diary, marks, net, crypto, notify, profile и т.д.
-    ├── ios/
-    │   ├── Info.plist          # манифест приложения (bundle id: ru.burmalda.journal)
-    │   ├── glue.m              # WKWebView, Keychain, PHPicker, уведомления, BGTask
-    │   └── icons/              # иконки приложения
-    └── vendor/                 # вендоренный бэкенд Slint (нужен из-за [patch.crates-io])
+crates/
+├── core/                       # домен, API, парсеры, крипта, кэш, хранилища
+├── ui/                         # общий Slint-UI Android/iOS
+└── mobile/                     # состояние, колбэки, сеть, Platform
+
+apps/ios/
+├── rust/
+│   ├── Cargo.toml              # оболочка iOS; backend winit + renderer Skia
+│   ├── build.rs                # компиляция ios/glue.m
+│   ├── src/
+│   │   ├── main.rs             # точка входа iOS-бинарника
+│   │   ├── lib.rs              # Sentry, ios_main
+│   │   ├── ios.rs              # Rust-часть мостов к Objective-C
+│   │   └── platform.rs         # Keychain, тема, safe area, уведомления
+│   └── ios/
+│       ├── Info.plist          # манифест приложения (bundle id: ru.burmalda.journal)
+│       ├── glue.m              # WKWebView, Keychain, PHPicker, уведомления, BGTask
+│       └── icons/              # иконки приложения
+└── README.md
 ```
 ---
 
@@ -196,4 +203,4 @@ ls -lh build/*.ipa
 
 ## 📄 Лицензия
 
-Apache-2.0 — см. [LICENSE](LICENSE).
+Apache-2.0 — см. [LICENSE](../../LICENSE).

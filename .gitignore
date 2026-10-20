@@ -1,0 +1,28 @@
+# Сборка
+/target/
+**/target/
+/build/
+*.ipa
+*.app
+*.dSYM/
+
+# Секреты и подписи
+*.jks
+*.keystore
+keystore.properties
+local.properties
+.env
+.env.*
+
+# ОС и IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.claude/
+.agents/
+*.swp
+*.swo
+*~
+slint_macros.log
+cargo-timing.html

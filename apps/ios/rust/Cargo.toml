@@ -1,11 +1,12 @@
 [package]
-name = "burmalda57"
+name = "burmalda57-ios"
 version = "1.0.0"
 edition = "2021"
 license = "Apache-2.0"
 
 [lib]
 # cdylib — .so для Android; rlib — чтобы iOS-бинарник мог слинковаться с библиотекой
+name = "burmalda57"
 crate-type = ["cdylib", "rlib"]
 
 # iOS-приложение — обычный бинарник (так Slint и рекомендует собирать под iOS).
@@ -19,55 +20,31 @@ required-features = ["ios-app"]
 [features]
 ios-app = []
 
-[profile.release]
-opt-level = "z"       
-lto = true              
-codegen-units = 1         
-panic = "abort"           
-strip = true              
-
-[profile.release.package.aes-gcm]
-opt-level = 3
-
-[profile.release.package.ring]
-opt-level = 3
-
-[profile.release.package.aes]
-opt-level = 3
-
 [dependencies]
-# Сеть
-reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "gzip", "rustls-tls-webpki-roots"] }
-tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-chrono = { version = "0.4", default-features = false, features = ["clock"] }
 sentry = { version = "0.48.4", default-features = false, features = [
     "backtrace", "contexts", "panic", "ureq", "rustls"
 ] }
-semver = "1"
-# Криптография (сессия)
-aes = "0.8"
+
+# Конверт DEK в Keychain (AES-GCM) на стороне iOS-оболочки
 aes-gcm = "0.10"
-hkdf = "0.12"
-sha2 = "0.10"
 rand = "0.8"
-base64 = "0.21"
 
 log = "0.4"
 
+# Общий с Android слой (состояние, UI-логика, сеть)
+burmalda57-mobile = { path = "../../../crates/mobile" }
+
+# Общий с Android Slint-UI (backend/renderer выбирает эта оболочка ниже)
+burmalda57-ui = { path = "../../../crates/ui" }
+
 # ---------- iOS: Slint на winit + Skia (Metal). FemtoVG/glutin на iOS не работают ----------
 [target.'cfg(target_os = "ios")'.dependencies]
-slint = { version = "1.16", default-features = false, features = [
+slint = { version = "=1.16.1", default-features = false, features = [
     "compat-1-2",
     "backend-winit",
     "renderer-skia",
 ] }
 
 [build-dependencies]
-slint-build = "1.16"
 # компилирует ios/glue.m (Objective-C) при сборке под iOS
 cc = "1"
-
-[patch.crates-io]
-i-slint-backend-android-activity = { path = "vendor/i-slint-backend-android-activity" }

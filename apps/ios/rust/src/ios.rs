@@ -1,4 +1,4 @@
-// ios.rs — iOS-слой. Тонкая обёртка над rust/ios/glue.m (Objective-C),
+// ios.rs — тонкая обёртка над rust/ios/glue.m (Objective-C),
 // который собирается в build.rs через крейт `cc`.
 //
 // Что где:
@@ -12,6 +12,9 @@
 // Все функции glue.m безопасны для вызова из любого потока: внутри они сами
 // переходят на главную очередь, где это нужно.
 use std::ffi::{c_char, c_int, CStr, CString};
+
+use burmalda57_ui::{AppWindow, Theme};
+use slint::ComponentHandle;
 
 extern "C" {
     fn bw_app_support_dir(buf: *mut c_char, cap: usize) -> usize;
@@ -83,7 +86,7 @@ pub(crate) fn safe_area() -> (f32, f32) {
 /// UI рисуется на весь экран (включая зону выреза), а в app.slint отступы
 /// top-inset/bottom-inset по умолчанию подогнаны под Android. Окно появляется
 /// не сразу, поэтому читаем отступы несколько раз с нарастающей задержкой.
-pub(crate) fn sync_safe_area(weak: slint::Weak<crate::AppWindow>) {
+pub(crate) fn sync_safe_area(weak: slint::Weak<AppWindow>) {
     for delay_ms in [250u64, 800, 2000] {
         let w = weak.clone();
         slint::Timer::single_shot(std::time::Duration::from_millis(delay_ms), move || {
@@ -93,13 +96,15 @@ pub(crate) fn sync_safe_area(weak: slint::Weak<crate::AppWindow>) {
                     ui.set_top_inset(top);
                 }
                 ui.set_bottom_inset(bottom);
+                ui.global::<Theme>()
+                    .set_nav_bottom_extra((bottom - 20.0).max(0.0));
             }
         });
     }
 }
 
 // ---------------------------------------------------------------------------
-//  Keychain (хранит ключ-обёртку KEK; см. crypto.rs)
+//  Keychain (хранит ключ-обёртку KEK; см. platform.rs)
 // ---------------------------------------------------------------------------
 
 /// `Ok(None)` — записи нет. `Err` — временный сбой (например, устройство ещё
@@ -168,8 +173,7 @@ pub extern "C" fn bw_on_esia_token(token: *const c_char) {
         return;
     }
     let raw = unsafe { CStr::from_ptr(token) }.to_string_lossy().into_owned();
-    let storage = crate::STORAGE.get().cloned().unwrap_or_default();
-    crate::session_flow::handle_esia_token(raw, storage);
+    burmalda57_mobile::handle_esia_token(&raw);
 }
 
 /// PHPicker выбрал картинку, glue.m уже ужал её до 512 px и закодировал в JPEG.
@@ -179,11 +183,13 @@ pub extern "C" fn bw_on_avatar_bytes(data: *const u8, len: usize) {
         return;
     }
     let bytes = unsafe { std::slice::from_raw_parts(data, len) };
-    crate::profile::set_avatar_bytes(bytes);
+    burmalda57_mobile::set_avatar_bytes(bytes);
 }
 
 /// BGAppRefreshTask: один прогон опроса оценок. 0 — успех, 1 — повторить позже.
 #[no_mangle]
 pub extern "C" fn bw_poll_blocking() -> c_int {
-    crate::notify::poll_blocking() as c_int
+    let platform: std::sync::Arc<dyn burmalda57_mobile::Platform> =
+        std::sync::Arc::new(crate::platform::IosPlatform);
+    burmalda57_mobile::poll_blocking(platform, storage_dir()) as c_int
 }

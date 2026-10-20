@@ -1,0 +1,177 @@
+name: Android (APK)
+
+# main/PR — debug APK в артефактах.
+# Тег android-v* — подписанный release APK, который публикуется в GitHub Releases
+# и становится «latest» для встроенной проверки обновлений приложения.
+on:
+  workflow_dispatch:
+  push:
+    tags: ["android-v*"]
+    branches: [main]
+    paths:
+      - "apps/android/**"
+      - "crates/**"
+      - "vendor/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/android.yml"
+  pull_request:
+    paths:
+      - "apps/android/**"
+      - "crates/**"
+      - "vendor/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/android.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.ref }}
+  # не отменяем публикацию релиза при новом пуше в main
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      # DSN вшивается в бинарник при компиляции; без секрета Sentry выключен
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ". -> target"
+
+      - name: JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Android platform, build-tools и NDK
+        run: |
+          yes | sdkmanager --licenses >/dev/null
+          sdkmanager "platforms;android-34" "build-tools;34.0.0" "ndk;29.0.14206865"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> "$GITHUB_ENV"
+
+      - name: cargo-ndk
+        run: cargo install cargo-ndk --locked
+
+      - name: Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Определить вариант сборки
+        id: variant
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/android-v* ]]; then
+            echo "value=release" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=debug" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Версия в теге должна совпадать и с versionName, и с версией Rust-крейта:
+      # по CARGO_PKG_VERSION приложение решает, показывать ли обновление.
+      - name: Проверить версию тега
+        if: steps.variant.outputs.value == 'release'
+        working-directory: apps/android
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#android-v}"
+          GRADLE_VERSION=$(sed -n "s/^[[:space:]]*versionName '\(.*\)'/\1/p" app/build.gradle | head -n1)
+          CARGO_VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' rust/Cargo.toml | head -n1)
+          echo "tag=$TAG_VERSION gradle=$GRADLE_VERSION cargo=$CARGO_VERSION"
+          if [[ "$TAG_VERSION" != "$GRADLE_VERSION" || "$TAG_VERSION" != "$CARGO_VERSION" ]]; then
+            echo "::error::Версия в теге ($TAG_VERSION) должна совпадать с versionName ($GRADLE_VERSION) и версией Rust-крейта ($CARGO_VERSION)"
+            exit 1
+          fi
+
+      - name: Подготовить keystore
+        if: steps.variant.outputs.value == 'release'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$KEYSTORE_BASE64" || -z "$KEYSTORE_PASSWORD" || -z "$KEY_ALIAS" || -z "$KEY_PASSWORD" ]]; then
+            echo "::error::Для release задайте secrets: ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD"
+            exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > apps/android/release.keystore
+          cat > apps/android/keystore.properties <<EOF
+          storeFile=../release.keystore
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+
+      - name: Сборка debug APK
+        if: steps.variant.outputs.value == 'debug'
+        working-directory: apps/android
+        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Сборка release APK
+        if: steps.variant.outputs.value == 'release'
+        working-directory: apps/android
+        run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
+
+      - name: Проверить подпись
+        if: steps.variant.outputs.value == 'release'
+        run: |
+          APK=apps/android/app/build/outputs/apk/release/app-release.apk
+          "$ANDROID_HOME/build-tools/34.0.0/apksigner" verify --print-certs "$APK"
+
+      - name: Артефакт APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: burmalda57-${{ steps.variant.outputs.value }}-apk
+          path: apps/android/app/build/outputs/apk/${{ steps.variant.outputs.value }}/app-${{ steps.variant.outputs.value }}.apk
+          if-no-files-found: error
+
+  release:
+    name: GitHub Release
+    if: startsWith(github.ref, 'refs/tags/android-v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # создание релиза и загрузка .apk
+    steps:
+      - name: Скачать APK
+        uses: actions/download-artifact@v4
+        with:
+          name: burmalda57-release-apk
+          path: dist
+
+      - name: Подготовить имя ассета
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#android-v}"
+          APK=$(find dist -name '*.apk' -type f | head -n1)
+          mv "$APK" "dist/burmalda57-${VERSION}.apk"
+          ls -lh dist
+
+      - name: GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: burmalda57 ${{ github.ref_name }}
+          generate_release_notes: true
+          make_latest: true
+          files: dist/*.apk
+          fail_on_unmatched_files: true

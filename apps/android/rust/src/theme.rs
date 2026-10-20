@@ -3,7 +3,7 @@ use jni::objects::{JObject, JValue};
 use jni::JNIEnv;
 use slint::ComponentHandle;
 
-use crate::{AppWindow, Theme};
+use burmalda57_ui::{AppWindow, Theme};
 
 // Очищает отложенные исключения Java
 fn clear_exception(env: &mut JNIEnv) {

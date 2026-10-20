@@ -1,7 +1,9 @@
 # Rust
 target/
 **/*.rs.bk
-Cargo.lock
+
+# Web
+/web/pkg/
 
 # Slint
 slint_macros.log

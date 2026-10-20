@@ -3,6 +3,10 @@
 Неофициальный **веб-клиент** электронного дневника Орловской области ([obr57.ru](https://obr57.ru/gis)).
 Ядро написано на **Rust**, интерфейс — [Slint](https://slint.dev), всё компилируется в **WebAssembly** и работает прямо в браузере, без серверной части.
 
+Это часть [монорепозитория burmalda57](../../README.md): общая бизнес-логика
+живёт в [`crates/core`](../../crates/core), а в этом крейте остаются только
+браузерные адаптеры и desktop-UI.
+
 > ⚠️ **Неофициальный проект.** Не связан с Департаментом образования Орловской области, порталом Госуслуг/ЕСИА или разработчиками официального дневника. Используется на свой страх и риск.
 
 ---
@@ -73,29 +77,33 @@
   rustup target add wasm32-unknown-unknown
   ```
 - **wasm-bindgen-cli** (версия должна совпадать с версией крейта
-  `wasm-bindgen` в `rust/Cargo.lock`):
+  `wasm-bindgen` в корневом `Cargo.lock`):
   ```bash
-  cargo install wasm-bindgen-cli --version 0.2.125
+  cargo install wasm-bindgen-cli --version 0.2.128
   ```
 
 ### Сборка
 
 **Windows (PowerShell):**
 ```powershell
-.\build_web.ps1
+.\build_web.ps1              # полная версия со входом
+.\build_web.ps1 -DemoOnly    # демо: без входа и сети
 ```
 
 **Linux / macOS:**
 ```bash
-./build_web.sh
+./build_web.sh               # полная версия со входом
+./build_web.sh --demo-only   # демо: без входа и сети
 ```
 
-Или вручную:
+Или вручную (из `apps/web`):
 ```bash
-cargo build --release --target wasm32-unknown-unknown
-wasm-bindgen target/wasm32-unknown-unknown/release/burmalda57.wasm \
+cargo build --release --target wasm32-unknown-unknown -p burmalda57-web
+wasm-bindgen ../../target/wasm32-unknown-unknown/release/burmalda57.wasm \
     --out-dir web/pkg --target web
 ```
+Для демо-сборки добавьте к `cargo build` флаг `--features demo-only`: она
+сразу открывает демо и отключает вход, выход и запросы к API.
 
 ### Запуск
 
@@ -112,6 +120,17 @@ python -m http.server 8080
 дальше всё как в мобильном приложении, включая выбор ребёнка для
 родительских аккаунтов. Есть и демо-режим без входа.
 
+### Публичный демо-стенд
+
+GitHub Pages собирает версию с `--features demo-only`: она сразу открывает
+демо и не показывает вход. Это сделано потому, что с публичного хостинга
+запросы к `mp2.obr57.ru` блокируются CORS и ограничениями по IP, а без
+своего прокси настоящий вход всё равно не заработает.
+
+Полную версию со входом нужно собирать локально (или на своём сервере) —
+см. команды выше. Для доступа к API может понадобиться CORS-прокси,
+передаваемый через `?proxy=`.
+
 ---
 
 ## 🗂️ Структура проекта
@@ -120,7 +139,9 @@ python -m http.server 8080
 .
 ├── Cargo.toml                # зависимости Rust и профили оптимизации
 ├── build.rs                  # компиляция ui/app.slint
-├── src/                      # логика: login, marks, diary, crypto, net, ...
+├── src/                      # платформенные адаптеры и маппинг core → Slint:
+│                             # app, http (fetch), secure_storage (WebCrypto),
+│                             # platform, theme, ui_bridge
 ├── ui/app.slint              # веб-интерфейс на Slint (M3 Navigation Rail)
 ├── web/
 │   ├── index.html            # страница приложения
@@ -130,10 +151,13 @@ python -m http.server 8080
 └── README.md
 ```
 
+Бизнес-логика (вход, дневник, оценки, кэши, шифрование) живёт в общем
+`crates/core`; web-крейт содержит только браузерные адаптеры и интерфейс.
+
 ---
 
 ## 📄 Лицензия
 
-[Apache License 2.0](LICENSE).
+[Apache License 2.0](../../LICENSE).
 
 Товарные знаки, названия и данные принадлежат их владельцам. Проект создан в образовательных целях как удобный клиент к уже существующему сервису.

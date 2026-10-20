@@ -42,7 +42,7 @@ class GradesWorker(appContext: Context, params: WorkerParameters) :
         private const val UNIQUE_NAME = "grades_poll"
         private const val MAX_ATTEMPTS = 3
 
-        // Имя .so из rust/Cargo.toml ([package] name = "burmalda57").
+        // Имя .so из apps/android/rust/Cargo.toml ([lib] name = "burmalda57").
         private const val NATIVE_LIB = "burmalda57"
 
         // Воркер может стартовать в свежем процессе, где MainActivity не

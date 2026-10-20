@@ -1,3 +1,0 @@
-# Настройки cargo для iOS-сборки.
-# Android-линкеры (NDK) и sccache из исходного проекта убраны: на macOS-раннере GitHub Actions
-# они не нужны. Файл оставлен, потому что workflow (.github/workflows/ios.yml) обращается к нему.

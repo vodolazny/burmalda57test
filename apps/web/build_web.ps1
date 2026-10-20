@@ -1,17 +1,22 @@
 # Сборка веб-версии (wasm)
+param([switch]$DemoOnly)
 
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
+$workspace = Split-Path (Split-Path $root -Parent) -Parent
+
+$buildArgs = @()
+if ($DemoOnly) { $buildArgs += '--features', 'demo-only' }
 
 # 1. Сборка wasm-библиотеки
 Push-Location "$root"
-cargo build --release --target wasm32-unknown-unknown
+cargo build --release --target wasm32-unknown-unknown -p burmalda57-web @buildArgs
 Pop-Location
 
 # 2. Генерация JS-обвязки (wasm-bindgen CLI)
 #    Ставится один раз: cargo install wasm-bindgen-cli
 wasm-bindgen `
-    "$root\target\wasm32-unknown-unknown\release\burmalda57.wasm" `
+    "$workspace\target\wasm32-unknown-unknown\release\burmalda57.wasm" `
     --out-dir "$root\web\pkg" `
     --target web
 
