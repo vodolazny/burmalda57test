@@ -208,16 +208,15 @@ jobs:
   # ───────────────────────── Публикация в Releases ─────────────────────────
   release:
     name: GitHub Release
-    # публикуем при любом запуске, кроме PR, но только если smoke-тест и сборка прошли
-    # (needs без доп. условий = оба job'а должны завершиться успешно)
-    if: github.event_name != 'pull_request'
+    # Только по готовому тегу ios-v*: GITHUB_TOKEN не может создавать теги
+    # на коммитах с изменениями workflow (у него нет права workflows),
+    # а сборки из main остаются в артефактах Actions.
+    if: startsWith(github.ref, 'refs/tags/ios-v')
     needs: [smoke, ipa]
     runs-on: ubuntu-latest
     permissions:
-      contents: write # создание релиза, тега и загрузка .ipa
+      contents: write # публикация релиза и загрузка .ipa
     steps:
-      - uses: actions/checkout@v5
-
       - name: Скачать .ipa
         uses: actions/download-artifact@v4
         with:
@@ -227,30 +226,15 @@ jobs:
       - name: Что скачалось
         run: find dist -type f -exec ls -lh {} +
 
-      - name: Определить тег релиза
-        id: rel
-        run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            # пуш тега ios-v*: релиз с этим тегом
-            echo "tag=$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
-            echo "notes=true" >> "$GITHUB_OUTPUT"
-          else
-            # пуш в main / ручной запуск: плавающий тег ios-latest, переносим на текущий коммит
-            git tag -f ios-latest "$GITHUB_SHA"
-            git push -f origin ios-latest
-            echo "tag=ios-latest" >> "$GITHUB_OUTPUT"
-            echo "notes=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.rel.outputs.tag }}
-          name: ${{ steps.rel.outputs.tag == 'ios-latest' && 'Latest build' || steps.rel.outputs.tag }}
+          tag_name: ${{ github.ref_name }}
+          name: burmalda57 ${{ github.ref_name }}
           prerelease: false
           # «latest» должен оставаться за Android-релизом: встроенное
           # автообновление Android читает /releases/latest и ищет там .apk.
           make_latest: false
           files: dist/build/*.ipa
           fail_on_unmatched_files: true
-          generate_release_notes: ${{ steps.rel.outputs.notes == 'true' }}
+          generate_release_notes: true
