@@ -116,7 +116,19 @@ jobs:
             echo "::error::Для release задайте secrets: ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD"
             exit 1
           fi
-          echo "$KEYSTORE_BASE64" | base64 -d > apps/android/release.keystore
+          # секрет часто вставляют с кавычками, переносами или data:-префиксом
+          B64=$(printf '%s' "$KEYSTORE_BASE64" \
+            | tr -d '[:space:]' \
+            | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//" -e 's|^data:[^,]*,||')
+          if ! printf '%s' "$B64" | base64 -d > apps/android/release.keystore 2>/dev/null; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 не является корректным base64. Пересоздайте секрет: base64 -w0 release.jks"
+            exit 1
+          fi
+          if ! keytool -list -alias "$KEY_ALIAS" \
+              -keystore apps/android/release.keystore -storepass "$KEYSTORE_PASSWORD" >/dev/null 2>&1; then
+            echo "::error::Не удалось открыть release.keystore: проверьте ANDROID_KEYSTORE_PASSWORD и ANDROID_KEY_ALIAS — они должны относиться к тому же .jks, что и ANDROID_KEYSTORE_BASE64"
+            exit 1
+          fi
           cat > apps/android/keystore.properties <<EOF
           storeFile=../release.keystore
           storePassword=$KEYSTORE_PASSWORD
