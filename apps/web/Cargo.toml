@@ -1,0 +1,90 @@
+[package]
+name = "burmalda57web"
+version = "1.0.0"
+edition = "2021"
+license = "Apache-2.0"
+
+[lib]
+name = "burmalda57"
+# cdylib — .wasm для браузера
+crate-type = ["cdylib", "rlib"]
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.release.package.aes-gcm]
+opt-level = 3
+
+[profile.release.package.aes]
+opt-level = 3
+
+[profile.release.package.sha2]
+opt-level = 3
+
+[profile.release.package.hkdf]
+opt-level = 3
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+log = "0.4"
+
+# Криптография (сессия и кеши). На wasm ключ DEK хранится отдельно
+# (см. crypto.rs: WebCrypto envelope), сами данные шифруются тут.
+aes = "0.8"
+aes-gcm = "0.10"
+hkdf = "0.12"
+sha2 = "0.10"
+rand = "0.8"
+getrandom = { version = "0.2", features = ["js"] }
+base64 = "0.21"
+
+# UI
+slint = { version = "1.8", default-features = false, features = [
+    "compat-1-2",
+    "renderer-femtovg",
+    "backend-winit",
+    "std",
+] }
+
+# Браузерная платформа
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
+wasm-logger = "0.2"
+console_error_panic_hook = "0.1"
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+    "Window",
+    "MediaQueryList",
+    "Location",
+    "UrlSearchParams",
+    "Storage",
+    "console",
+    "Crypto",
+    "CryptoKey",
+    "SubtleCrypto",
+    "Headers",
+    "RequestInit",
+    "Response",
+    "AbortController",
+    "AbortSignal",
+    "IdbFactory",
+    "IdbDatabase",
+    "IdbObjectStore",
+    "IdbOpenDbRequest",
+    "IdbRequest",
+    "IdbTransaction",
+    "IdbTransactionMode",
+    "IdbVersionChangeEvent",
+]
+
+[build-dependencies]
+slint-build = "1.8"
