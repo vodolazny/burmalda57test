@@ -1,0 +1,251 @@
+name: iOS (smoke test + unsigned IPA)
+
+# Два параллельных job'а:
+#   smoke — собирает под симулятор, запускает приложение, делает скриншот и собирает логи;
+#   ipa   — собирает неподписанный .ipa для устройства (AltStore / Sideloadly / TrollStore).
+# По тегу v* job release публикует .ipa в GitHub Releases, но только если оба job'а прошли.
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+    branches: [main]
+    paths:
+      - "rust/**"
+      - ".github/workflows/ios.yml"
+  pull_request:
+    paths:
+      - "rust/**"
+      - ".github/workflows/ios.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IPHONEOS_DEPLOYMENT_TARGET: "15.0"
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # ───────────────────────── Smoke-тест в симуляторе ─────────────────────────
+  smoke:
+    name: Smoke test (simulator)
+    runs-on: macos-14 # Apple Silicon, значит таргет aarch64-apple-ios-sim
+    timeout-minutes: 60
+    env:
+      BUNDLE_ID: ru.burmalda.journal
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios-sim
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - name: Подготовка окружения
+        run: |
+          # rust/.cargo/config.toml включает sccache для локальной разработки;
+          # на раннере его нет, и cargo упал бы сразу при запуске rustc.
+          sed -i '' '/rustc-wrapper/d' rust/.cargo/config.toml
+          # cmake нужен aws-lc-sys (TLS), ninja — запасной путь Skia
+          command -v cmake >/dev/null || brew install cmake
+          command -v ninja >/dev/null || brew install ninja
+          xcodebuild -version
+          rustc --version
+
+      - name: Сборка под симулятор
+        working-directory: rust
+        run: >
+          cargo build --release
+          --target aarch64-apple-ios-sim
+          --bin burmalda57-ios
+          --features ios-app
+
+      - name: Упаковка .app для симулятора
+        working-directory: rust
+        run: |
+          APP=build/burmalda57.app
+          rm -rf build && mkdir -p "$APP"
+          cp target/aarch64-apple-ios-sim/release/burmalda57-ios "$APP/burmalda57"
+          chmod +x "$APP/burmalda57"
+          VERSION=$(grep -m1 '^version' Cargo.toml | cut -d'"' -f2)
+          sed -e "s/@VERSION@/${VERSION}/" -e "s/@BUILD@/${{ github.run_number }}/" ios/Info.plist > "$APP/Info.plist"
+          # для симулятора платформа в Info.plist другая
+          /usr/libexec/PlistBuddy -c "Set :CFBundleSupportedPlatforms:0 iPhoneSimulator" "$APP/Info.plist"
+          plutil -lint "$APP/Info.plist"
+          cp ios/icons/*.png "$APP/"
+          printf 'APPL????' > "$APP/PkgInfo"
+          # симулятору нужна хотя бы ad-hoc подпись
+          codesign --force --sign - "$APP"
+
+      - name: Запуск в симуляторе
+        id: run
+        working-directory: rust
+        run: |
+          set -x
+          UDID=$(xcrun simctl list devices available -j \
+            | jq -r '[.devices[] | .[] | select(.name | startswith("iPhone"))][0].udid')
+          echo "Симулятор: $UDID"
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl install "$UDID" build/burmalda57.app
+          xcrun simctl launch "$UDID" "$BUNDLE_ID" | tee launch.txt
+
+          # даём приложению 20 секунд: если оно упадёт при старте, это будет видно
+          sleep 20
+          xcrun simctl io "$UDID" screenshot screenshot.png
+
+          # у живого процесса в launchctl есть PID, у упавшего стоит "-"
+          xcrun simctl spawn "$UDID" launchctl list | grep "$BUNDLE_ID" | tee state.txt
+          PID=$(awk '{print $1}' state.txt | head -1)
+          if [ -z "$PID" ] || [ "$PID" = "-" ]; then
+            echo "::error::Приложение не запущено или упало после старта"
+            exit 1
+          fi
+          echo "OK: приложение работает, PID $PID"
+
+      - name: Собрать логи и краш-репорты
+        if: always()
+        working-directory: rust
+        run: |
+          mkdir -p artifacts
+          cp screenshot.png launch.txt state.txt artifacts/ 2>/dev/null || true
+          cp ~/Library/Logs/DiagnosticReports/*burmalda* artifacts/ 2>/dev/null || true
+          xcrun simctl spawn booted log show --last 2m --style compact \
+            --predicate 'process == "burmalda57"' > artifacts/app.log 2>&1 || true
+
+      - name: Проверить, что UI реально создался
+        working-directory: rust
+        run: |
+          if grep -q "could not load class" artifacts/app.log; then
+            echo "::error::Не загрузился класс сцены, UI не создан (чёрный экран)"
+            exit 1
+          fi
+
+      - name: Артефакты smoke-теста (скриншот, логи)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-smoke
+          path: rust/artifacts/
+          if-no-files-found: warn
+
+  # ───────────────────────── Неподписанный .ipa ─────────────────────────
+  ipa:
+    name: Unsigned IPA (device)
+    runs-on: macos-15
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - name: Подготовка окружения
+        run: |
+          # rust/.cargo/config.toml включает sccache для локальной разработки;
+          # на раннере его нет, и cargo упал бы сразу при запуске rustc.
+          sed -i '' '/rustc-wrapper/d' rust/.cargo/config.toml
+          # cmake нужен aws-lc-sys (TLS), ninja — запасной путь Skia, если нет готовых бинарников
+          command -v cmake >/dev/null || brew install cmake
+          command -v ninja >/dev/null || brew install ninja
+          xcodebuild -version
+          rustc --version
+
+      - name: Сборка (cargo, aarch64-apple-ios)
+        working-directory: rust
+        run: >
+          cargo build --release
+          --target aarch64-apple-ios
+          --bin burmalda57-ios
+          --features ios-app
+
+      - name: Упаковка в .ipa
+        run: |
+          set -euo pipefail
+          VERSION=$(grep -m1 '^version' rust/Cargo.toml | cut -d'"' -f2)
+          IPA="burmalda57-${VERSION}-unsigned.ipa"
+          echo "IPA=$IPA" >> "$GITHUB_ENV"
+          APP="build/Payload/burmalda57.app"
+          rm -rf build && mkdir -p "$APP"
+          cp rust/target/aarch64-apple-ios/release/burmalda57-ios "$APP/burmalda57"
+          chmod +x "$APP/burmalda57"
+          sed -e "s/@VERSION@/${VERSION}/" -e "s/@BUILD@/${{ github.run_number }}/" \
+              rust/ios/Info.plist > "$APP/Info.plist"
+          plutil -lint "$APP/Info.plist"
+          cp rust/ios/icons/*.png "$APP/"
+          printf 'APPL????' > "$APP/PkgInfo"
+          (cd build && zip -qry "$IPA" Payload)
+          echo "--- Mach-O ---"
+          lipo -info "$APP/burmalda57"
+          vtool -show-build "$APP/burmalda57" | head -8 || true
+          ls -lh "build/$IPA"
+
+      - name: Артефакт (.ipa)
+        uses: actions/upload-artifact@v4
+        with:
+          name: burmalda57-unsigned-ipa
+          path: |
+            build/${{ env.IPA }}
+            rust/Cargo.lock
+          if-no-files-found: error
+
+  # ───────────────────────── Публикация в Releases ─────────────────────────
+  release:
+    name: GitHub Release
+    # публикуем при любом запуске, кроме PR, но только если smoke-тест и сборка прошли
+    # (needs без доп. условий = оба job'а должны завершиться успешно)
+    if: github.event_name != 'pull_request'
+    needs: [smoke, ipa]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # создание релиза, тега и загрузка .ipa
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Скачать .ipa
+        uses: actions/download-artifact@v4
+        with:
+          name: burmalda57-unsigned-ipa
+          path: dist
+
+      - name: Что скачалось
+        run: find dist -type f -exec ls -lh {} +
+
+      - name: Определить тег релиза
+        id: rel
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            # пуш тега v*: релиз с этим тегом
+            echo "tag=$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
+            echo "notes=true" >> "$GITHUB_OUTPUT"
+          else
+            # пуш в main / ручной запуск: плавающий тег latest, переносим на текущий коммит
+            git tag -f latest "$GITHUB_SHA"
+            git push -f origin latest
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+            echo "notes=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.rel.outputs.tag }}
+          name: ${{ steps.rel.outputs.tag == 'latest' && 'Latest build' || steps.rel.outputs.tag }}
+          prerelease: false
+          make_latest: true
+          files: dist/build/*.ipa
+          fail_on_unmatched_files: true
+          generate_release_notes: ${{ steps.rel.outputs.notes == 'true' }}

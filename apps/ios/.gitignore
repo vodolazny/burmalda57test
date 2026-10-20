@@ -1,0 +1,17 @@
+.DS_Store
+Thumbs.db
+.claude/
+.agents/
+.vscode/
+.idea/
+
+# Сборочные артефакты
+/rust/target/
+**/target/
+/build/
+*.ipa
+*.app
+*.dSYM/
+
+**/*.rs.bk
+cargo-timing.html
