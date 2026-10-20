@@ -7,7 +7,7 @@ use crate::api::ApiRequest;
 // (android-vX.Y.Z / ios-vX.Y.Z), а «latest» у репозитория один. С /latest
 // iOS-приложение сравнивало бы свою версию с версией Android-релиза.
 const RELEASES_URL: &str =
-    "https://api.github.com/repos/vodolazny/burmalda57/releases?per_page=20";
+    "https://api.github.com/repos/vodolazny/burmalda57test/releases?per_page=20";
  
 #[derive(Deserialize)]
 struct GhRelease {
