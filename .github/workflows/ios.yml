@@ -3,7 +3,8 @@ name: iOS (smoke test + unsigned IPA)
 # Два параллельных job'а:
 #   smoke — собирает под симулятор, запускает приложение, делает скриншот и собирает логи;
 #   ipa   — собирает неподписанный .ipa для устройства (AltStore / Sideloadly / TrollStore).
-# По тегу ios-v* job release публикует .ipa в GitHub Releases, но только если оба job'а прошли.
+# По тегу ios-v* release публикует версионный .ipa. На main после успешных smoke+ipa
+# обновляется плавающий релиз ios-latest, чтобы свежая сборка была доступна без тега.
 on:
   workflow_dispatch:
   push:
@@ -208,10 +209,9 @@ jobs:
   # ───────────────────────── Публикация в Releases ─────────────────────────
   release:
     name: GitHub Release
-    # Только по готовому тегу ios-v*: GITHUB_TOKEN не может создавать теги
-    # на коммитах с изменениями workflow (у него нет права workflows),
-    # а сборки из main остаются в артефактах Actions.
-    if: startsWith(github.ref, 'refs/tags/ios-v')
+    # main — обновляем плавающий релиз ios-latest;
+    # тег ios-v* — публикуем версионный релиз.
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/ios-v')
     needs: [smoke, ipa]
     runs-on: ubuntu-latest
     permissions:
@@ -226,7 +226,20 @@ jobs:
       - name: Что скачалось
         run: find dist -type f -exec ls -lh {} +
 
-      - name: GitHub Release
+      # Тег ios-latest создан заранее: GITHUB_TOKEN не может создавать
+      # и двигать теги на коммитах с изменениями workflow.
+      - name: Подготовить IPA для ios-latest
+        if: github.ref == 'refs/heads/main'
+        id: meta
+        run: |
+          set -euo pipefail
+          IPA=$(find dist/build -name '*.ipa' -type f | head -n1)
+          VERSION=$(basename "$IPA" | sed -n 's/^burmalda57-\(.*\)-unsigned\.ipa$/\1/p')
+          cp "$IPA" dist/burmalda57-ios-latest-unsigned.ipa
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: GitHub Release (ios-v*)
+        if: startsWith(github.ref, 'refs/tags/ios-v')
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
@@ -238,3 +251,23 @@ jobs:
           files: dist/build/*.ipa
           fail_on_unmatched_files: true
           generate_release_notes: true
+
+      - name: GitHub Release (main → ios-latest)
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ios-latest
+          target_commitish: ${{ github.sha }}
+          name: iOS latest build ${{ steps.meta.outputs.version }} (unsigned)
+          prerelease: false
+          make_latest: false
+          files: dist/burmalda57-ios-latest-unsigned.ipa
+          fail_on_unmatched_files: true
+          body: |
+            Автоматическая сборка iOS из main после успешных smoke-теста и сборки IPA.
+
+            - Версия: ${{ steps.meta.outputs.version }}
+            - Коммит: ${{ github.sha }}
+            - Запуск: [${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+            Пакет не подписан: перед установкой его нужно переподписать (AltStore / Sideloadly / TrollStore).

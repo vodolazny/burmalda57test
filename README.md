@@ -88,6 +88,8 @@ Debug APK для Android также собирается локально из `
   должна совпадать с `versionName` и версией Rust-крейта; `versionCode`
   увеличивается вручную.
 - **iOS:** тег `ios-vX.Y.Z` публикует неподписанный `.ipa` в Releases.
+  После каждого успешного прогона на `main` (smoke + IPA) обновляется
+  плавающий релиз [ios-latest](../../releases/tag/ios-latest) с той же сборкой.
   Инструкция по переподписи — в [apps/ios/README.md](apps/ios/README.md).
 - **Web:** каждый push в `main` собирает wasm в демо-режиме и деплоит на
   GitHub Pages (источник Pages — «GitHub Actions»). Вход отключён: публичный
