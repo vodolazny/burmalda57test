@@ -680,7 +680,7 @@ fn check_update(app: &Arc<App>) {
     let spawner = app.clone();
     let task = app.clone();
     spawner.http.spawn(async move {
-        let request = update::request();
+        let request = update::request(task.platform.package_ext());
         let Ok(resp) = task.http.execute(&request).await else {
             return;
         };
